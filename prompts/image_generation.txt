@@ -1,0 +1,5 @@
+Read given article or theme carefully, and give me prompt to generate image, which matches given text.
+You should not have any text or characters on image.
+You should write only prompt, without any additional words
+Text title is {{ .Title }}
+Text: "{{ .Content }}"

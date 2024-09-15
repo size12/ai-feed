@@ -1,0 +1,195 @@
+package views
+
+import "github.com/google/uuid"
+
+type Theme struct {
+    ID uuid.UUID
+
+	Description string
+}
+
+templ NewThemes(themes []*Theme) {
+    <!DOCTYPE html>
+    <html lang="ru">
+       <head>
+          <meta charset="UTF-8">
+          <title>Панель управления</title>
+          <link
+             rel="stylesheet"
+             href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css"
+             >
+          <script>
+             const namesSrc = {
+                "create": {
+                   "method": "POST",
+                   "title": "Создать новую тему",
+                   "header": "Заполните нужную информацию для создания новой темы",
+                   "button": "Создать",
+                   "error": "Не получилось создать новую тему"
+                },
+                "edit": {
+                   "method": "PUT",
+                   "title": "Редактирование темы",
+                   "header": "Измените нужную информацию",
+                   "button": "Сохранить",
+                   "error": "Не получилось отредактировать тему"
+                }
+             }
+
+             function validateForm(formData) {
+                for (let [key, val] of formData.entries()) {
+                   if (val === "") {
+                      alert(`Поле '${key}' не должно быть пустым`)
+                      return false
+                   }
+                }
+
+                return true
+             }
+
+             function createDialog(param, id = "", description = "") {
+                const names = namesSrc[param]
+
+                const dialogHTML = `
+                           <article>
+                              <header>
+                                 <button aria-label="close" rel="prev" id="close-dialog"></button>
+                                 <p>
+                                    <strong>${names["title"]}</strong>
+                                 </p>
+                              </header>
+                              <p>
+                                 <u>${names["header"]}</u>
+                              </p>
+                              <form id="create-form">
+                                 <label>
+                                 Тема
+                                 <input type="text" name="description" placeholder="OpenAI выпустила новую революционную модель o1" value="${description}">
+                                 </label>
+                              </form>
+                              <footer>
+                                 <button id="dialog-btn">${names["button"]}</button>
+                              </footer>
+                           </article>
+                           `
+
+                const dialog = document.createElement('dialog');
+                dialog.open = true;
+                dialog.innerHTML = dialogHTML;
+
+                dialog.querySelector("#close-dialog").onclick = function() {
+                   dialog.parentNode.removeChild(dialog);
+                }
+
+                const form = dialog.querySelector("form")
+
+                dialog.querySelector("#dialog-btn").addEventListener("click", function(event) {
+                   event.preventDefault()
+
+                   const formData = new FormData(form);
+
+                   if (!validateForm(formData)) {
+                      return
+                   }
+
+                   let obj = Object.fromEntries(formData)
+                   if (id !== "") {
+                      obj["id"] = id
+                   }
+
+                   const json = JSON.stringify(obj);
+
+                   fetch('/api/theme', {
+                      method: names["method"],
+                      headers: {
+                         'Content-Type': 'application/json'
+                      },
+                      body: json
+                   }).then(response => {
+                      if (response.status !== 200 && response.status !== 201 && response.status !== 202) {
+                         response.text().then(function(text) {
+                            alert(`${names["error"]}: ${text}`)
+                         })
+                         return
+                      }
+
+                      location.reload();
+
+                   }).catch(err => alert(`Не получилось отправить запрос на сервер ${err}`))
+                })
+
+                document.body.appendChild(dialog)
+             }
+
+             window.onload = function() {
+                document.querySelector("#create-theme").onclick = function() {
+                   createDialog("create")
+                }
+
+                document.querySelectorAll(".theme").forEach(el => {
+                   const id = el.getAttribute("data-uuid")
+
+                   const description = el.querySelector("h5").textContent
+
+                   el.querySelector("button.edit").addEventListener("click", function() {
+                      createDialog("edit", id, description)
+                   })
+
+                   el.querySelector("button.delete").addEventListener("click", function() {
+                      fetch('/api/theme', {
+                         method: 'DELETE',
+                         headers: {
+                            'Content-Type': 'text/plain'
+                         },
+                         body: id
+                      }).then(response => {
+                         if (response.status !== 200) {
+                            response.text().then(function(text) {
+                               alert(`Не получилось удалить тему: ${text}`)
+                            })
+                            return
+                         }
+
+                         location.reload();
+
+                      }).catch(err => alert(`Не получилось отправить запрос на сервер ${err}`))
+                   })
+                })
+             };
+          </script>
+       </head>
+       <body class="container">
+          <br>
+          <nav>
+             <ul>
+                <li>
+                   <h1>Добро пожаловать в AI-feed!</h1>
+                </li>
+             </ul>
+             <ul>
+                <li><a href="/articles">Статьи</a></li>
+                <li><a href="/themes">Темы</a></li>
+                <li><a href="/personalities">Личности</a></li>
+             </ul>
+          </nav>
+          <br>
+          <div>
+             <button class="container" id="create-theme">Создать новую тему</button>
+             <br><br>
+             <div>
+                for _, theme := range themes {
+                <article class="theme" data-uuid={theme.ID.String()}>
+                   <div class="grid">
+                      <h5>{theme.Description}</h5>
+                      <div class="grid">
+                         <button class="outline edit">Редактировать</button>
+                         <button class="outline secondary delete">Удалить</button>
+                      </div>
+                   </div>
+                </article>
+                }
+             </div>
+          </div>
+       </body>
+    </html>
+}

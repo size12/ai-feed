@@ -1,0 +1,33 @@
+package views
+
+import "html/template"
+
+type ShownArticle struct {
+    Title string
+    ImageBase64 string
+    Content *template.Template
+}
+
+templ NewShownArticle(article *ShownArticle) {
+    <!DOCTYPE html>
+    <html lang="ru">
+       <head>
+          <meta charset="UTF-8">
+          <title>{article.Title}</title>
+          <link
+             rel="stylesheet"
+             href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css"
+             >
+       </head>
+       <body class="container">
+          <br>
+          <h1>{article.Title}</h1>
+          <div class="grid">
+             if article.ImageBase64 != "" {
+             <img src={article.ImageBase64}>
+             }
+             <p>@templ.FromGoHTML(article.Content, nil)</p>
+          </div>
+       </body>
+    </html>
+}

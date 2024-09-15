@@ -1,0 +1,219 @@
+package views
+
+import "github.com/google/uuid"
+
+type Personality struct {
+    ID uuid.UUID
+
+	Name      string
+	Biography string
+	Keywords  string
+	Thematics string
+	TextStyle string
+}
+
+templ NewPersonalities(personalities []*Personality) {
+    <!DOCTYPE html>
+    <html lang="ru">
+       <head>
+          <meta charset="UTF-8">
+          <title>Панель управления</title>
+          <link
+             rel="stylesheet"
+             href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css"
+             >
+          <script>
+            const namesSrc = {
+               "create": {
+                  "method": "POST",
+                  "title": "Создать новую личность",
+                  "header": "Заполните нужную информацию для создания новой личности",
+                  "button": "Создать",
+                  "error": "Не получилось создать новую личность"
+               },
+               "edit": {
+                  "method": "PUT",
+                  "title": "Редактирование личности",
+                  "header": "Измените нужную информацию",
+                  "button": "Сохранить",
+                  "error": "Не получилось отредактировать личность"
+               }
+            }
+
+            function validateForm(formData) {
+               for (let [key, val] of formData.entries()) {
+                  if (val === "") {
+                     alert(`Поле '${key}' не должно быть пустым`)
+                     return false
+                  }
+               }
+
+               return true
+            }
+
+            function createDialog(param, id = "", name = "", biography = "", keywords = "", thematics = "", textStyle = "") {
+               const names = namesSrc[param]
+
+               const dialogHTML = `
+                        <article>
+                           <header>
+                              <button aria-label="close" rel="prev" id="close-dialog"></button>
+                              <p>
+                                 <strong>${names["title"]}</strong>
+                              </p>
+                           </header>
+                           <p>
+                              <u>${names["header"]}</u>
+                           </p>
+                           <form id="create-form">
+                              <label>
+                              Имя
+                              <input type="text" name="name" placeholder="Александр Пушкин" value="${name}">
+                              </label>
+                              <label>
+                              Биография
+                              <textarea name="biography" placeholder="Великий русский поэт, прозаик, драматург, один из самых авторитетных литературных деятелей первой трети XIX века.">${biography}</textarea>
+                              </label>
+                              <label>
+                              Ключевые слова
+                              <input type="text" name="keywords" placeholder="поэзия литература романтизм" value="${keywords}">
+                              </label>
+                              <label>
+                              Тематика
+                              <input type="text" name="thematics" placeholder="Поэзия" value="${thematics}">
+                              </label>
+                              <label>
+                              Стиль речи
+                              <input type="text" name="text_style" placeholder="Официальный" value="${textStyle}">
+                              </label>
+                           </form>
+                           <footer>
+                              <button id="dialog-btn">${names["button"]}</button>
+                           </footer>
+                        </article>
+                             `
+
+               const dialog = document.createElement('dialog');
+               dialog.open = true;
+               dialog.innerHTML = dialogHTML;
+
+               dialog.querySelector("#close-dialog").onclick = function() {
+                  dialog.parentNode.removeChild(dialog);
+               }
+
+               const form = dialog.querySelector("form")
+
+               dialog.querySelector("#dialog-btn").addEventListener("click", function(event) {
+                  event.preventDefault()
+
+                  const formData = new FormData(form);
+
+                  if (!validateForm(formData)) {
+                     return
+                  }
+
+                  let obj = Object.fromEntries(formData)
+                  if (id !== "") {
+                     obj["id"] = id
+                  }
+
+                  const json = JSON.stringify(obj);
+
+                  fetch('/api/personality', {
+                     method: names["method"],
+                     headers: {
+                        'Content-Type': 'application/json'
+                     },
+                     body: json
+                  }).then(response => {
+                     if (response.status !== 201 && response.status !== 202) {
+                        response.text().then(function(text) {
+                           alert(`${names["error"]}: ${text}`)
+                        })
+                        return
+                     }
+
+                     location.reload();
+
+                  }).catch(err => alert(`Не получилось отправить запрос на сервер ${err}`))
+               })
+
+               document.body.appendChild(dialog)
+            }
+
+            window.onload = function() {
+               document.querySelector("#create-personality").onclick = function() {
+                  createDialog("create")
+               }
+
+               document.querySelectorAll(".personality").forEach(el => {
+                  const id = el.getAttribute("data-uuid")
+
+                  const name = el.querySelector("h5").textContent
+                  const bio = el.getAttribute("data-bio")
+                  const keywords = el.getAttribute("data-keywords")
+                  const thematics = el.getAttribute("data-thematics")
+                  const textStyle = el.getAttribute("data-text-style")
+
+                  el.querySelector("button.edit").addEventListener("click", function() {
+                     createDialog("edit", id, name, bio, keywords, thematics, textStyle)
+                  })
+
+                  el.querySelector("button.delete").addEventListener("click", function() {
+                     fetch('/api/personality', {
+                        method: 'DELETE',
+                        headers: {
+                           'Content-Type': 'text/plain'
+                        },
+                        body: id
+                     }).then(response => {
+                        if (response.status !== 200) {
+                           response.text().then(function(text) {
+                              alert(`Не получилось удалить личность: ${text}`)
+                           })
+                           return
+                        }
+
+                        location.reload();
+
+                     }).catch(err => alert(`Не получилось отправить запрос на сервер ${err}`))
+                  })
+               })
+            };
+          </script>
+       </head>
+       <body class="container">
+          <br>
+          <nav>
+             <ul>
+                <li>
+                   <h1>Добро пожаловать в AI-feed!</h1>
+                </li>
+             </ul>
+             <ul>
+                <li><a href="/articles">Статьи</a></li>
+                <li><a href="/themes">Темы</a></li>
+                <li><a href="/personalities">Личности</a></li>
+             </ul>
+          </nav>
+          <br>
+          <div>
+             <button class="container" id="create-personality">Создать новую личность</button>
+             <br><br>
+             <div>
+                for _, personality := range personalities {
+                <article class="personality" data-uuid={personality.ID.String()} data-bio={personality.Biography} data-keywords={personality.Keywords} data-thematics={personality.Thematics} data-text-style={personality.TextStyle}>
+                   <div class="grid">
+                      <h5>{personality.Name}</h5>
+                      <div class="grid">
+                         <button class="outline edit">Редактировать</button>
+                         <button class="outline secondary delete">Удалить</button>
+                      </div>
+                   </div>
+                </article>
+                }
+             </div>
+          </div>
+       </body>
+    </html>
+}

@@ -1,0 +1,3 @@
+Read given article or theme carefully, and give me best title, which describes given text. Use about 3-8 words.
+Write only title. DO NOT write any additional characters. Use same language as in given text.
+Text: "{{ .Description }}"

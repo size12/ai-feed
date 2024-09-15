@@ -1,0 +1,18 @@
+app:
+  run_port: ":8080"
+ai:
+  open_ai_endpoint: "https://api.proxyapi.ru/openai/v1"
+  open_ai_auth_token: "sk-xxx..."
+  model_type: "gpt-4o"
+
+  image_prompt_path: "./prompts/image_generation.txt"
+  text_prompt_path: "./prompts/text_generation.txt"
+  title_prompt_path: "./prompts/title_generation.txt"
+
+storage:
+  postgres_endpoint: "postgresql://username:password@db:5432/ai-feed"
+  themes_actual_count: 10
+  worker_actual_update: 10m
+
+feeder:
+  feed_update_delay: 1h

@@ -1,0 +1,434 @@
+package views
+
+import "github.com/google/uuid"
+
+type Article struct {
+    ID uuid.UUID
+
+	Title       string
+    ImageBase64 string
+    Content     string
+}
+
+templ NewArticles(articles []*Article, themes []*Theme, personalities []*Personality) {
+    <!DOCTYPE html>
+    <html lang="ru">
+       <head>
+          <meta charset="UTF-8">
+          <title>Панель управления</title>
+          <link
+             rel="stylesheet"
+             href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css"
+             >
+          <script>
+            function validateForm(formData) {
+               for (let [key, val] of formData.entries()) {
+                  if (val === "") {
+                     alert(`Поле '${key}' не должно быть пустым`)
+                     return false
+                  }
+               }
+
+               return true
+            }
+
+            function createDialog(id, title = "", content = "", image = "") {
+               const dialogHTML = `
+                             <article>
+                                <header>
+                                   <button aria-label="close" rel="prev" id="close-dialog"></button>
+                                   <p>
+                                      <strong>Редактирование статьи</strong>
+                                   </p>
+                                </header>
+                                <p>
+                                   <u>Измените нужную информацию</u>
+                                </p>
+                                <form id="create-form">
+                                   <label>
+                                   Заголовок статьи
+                                   <input type="text" name="title" placeholder="Кликбейтный заголовок 1" value="${title}">
+                                   </label>
+                                   <label>
+                                   Текст статьи
+                                   <textarea id="article-content" name="content"
+                                      rows="10"
+                                      placeholder="Напишите или сгенерируйте статью"
+                                      aria-label="Напишите или сгенерируйте статью">${content}</textarea>
+                                   </label>
+                                   <label>
+                                   Выберите рисунок
+                                   <input type="file" id="image-select">
+                                   </label>
+                                </form>
+                                <footer>
+                                   <button id="dialog-btn">Сохранить</button>
+                                </footer>
+                             </article>
+                             `
+
+               const dialog = document.createElement('dialog');
+               dialog.open = true;
+               dialog.innerHTML = dialogHTML;
+
+               dialog.querySelector("#close-dialog").onclick = function() {
+                  dialog.parentNode.removeChild(dialog);
+               }
+
+               const form = dialog.querySelector("form")
+
+               var imageContent = ""
+
+               dialog.querySelector("#image-select").addEventListener("change", (e) => {
+                  const imageFile = e.target.files[0];
+
+                  var fileReader = new FileReader()
+
+                  fileReader.onload = function(fileLoadedEvent) {
+                     imageContent = fileLoadedEvent.target.result
+                     console.log(imageContent)
+                  }
+
+                  fileReader.readAsDataURL(imageFile);
+               })
+
+               dialog.querySelector("#dialog-btn").addEventListener("click", function(event) {
+                  event.preventDefault()
+
+                  const formData = new FormData(form);
+
+                  if (!validateForm(formData)) {
+                     return
+                  }
+
+                  let obj = Object.fromEntries(formData)
+                  obj["id"] = id
+                  obj["image_base64"] = imageContent
+
+                  const json = JSON.stringify(obj);
+
+                  fetch('/api/article', {
+                     method: "PUT",
+                     headers: {
+                        'Content-Type': 'application/json'
+                     },
+                     body: json
+                  }).then(response => {
+                     if (response.status !== 200 && response.status !== 201 && response.status !== 202) {
+                        response.text().then(function(text) {
+                           alert(`Не удалось изменить текст: ${text}`)
+                        })
+                        return
+                     }
+
+                     location.reload();
+
+                  }).catch(err => alert(`Не получилось отправить запрос на сервер ${err}`))
+               })
+
+               document.body.appendChild(dialog)
+            }
+
+            function editArticle(id) {
+               fetch(`/api/article?id=${id}`, {
+                     method: "GET",
+                  })
+                  .then((response) => {
+                     response.json().then((article) => {
+                        createDialog(id, article["title"], article["content"])
+                     })
+                  })
+                  .catch(err => alert(`Не получилось отправить запрос на сервер ${err}`))
+            }
+
+            window.onload = function() {
+               const dialogElement = document.querySelector("#create-dialog")
+               const dialogForm = dialogElement.querySelector("form")
+               const themeSelect = dialogElement.querySelector("#select-theme")
+               const personalitySelect = dialogElement.querySelector("#select-personality")
+               const title = dialogElement.querySelector("#article-title")
+               const content = dialogElement.querySelector("#article-content")
+               const articleImage = dialogElement.querySelector("#article-image")
+               const saveArticleBtn = dialogElement.querySelector("#save-article-btn")
+
+               document.querySelector("#create-article").onclick = function() {
+                  dialogElement.open = true;
+               }
+
+               dialogElement.querySelector("#close-dialog").onclick = function() {
+                  dialogElement.open = false;
+               }
+
+               dialogElement.querySelector("#generate-content").onclick = function(e) {
+                  e.preventDefault()
+
+                  const themeDescription = themeSelect.options[themeSelect.selectedIndex].text
+
+                  if (themeSelect.selectedIndex === 0) {
+                     alert("Пожалуйста выберите тему из списка")
+                     return
+                  }
+
+                  if (personalitySelect.selectedIndex === 0) {
+                     alert("Пожалуйста выберите личность из списка")
+                     return
+                  }
+
+                  const personality = {
+                     "name": personalitySelect.options[personalitySelect.selectedIndex].text,
+                     "biography": personalitySelect.options[personalitySelect.selectedIndex].getAttribute("data-bio"),
+                     "keywords": personalitySelect.options[personalitySelect.selectedIndex].getAttribute("data-keywords"),
+                     "thematics": personalitySelect.options[personalitySelect.selectedIndex].getAttribute("data-thematics"),
+                     "text_style": personalitySelect.options[personalitySelect.selectedIndex].getAttribute("data-text-style")
+                  }
+
+
+                  const request = {
+                     "theme": {
+                        "description": themeDescription
+                     },
+
+                     "personality": personality
+                  }
+
+
+                  this.setAttribute("aria-busy", true)
+
+                  fetch('/api/generate/article', {
+                        method: 'POST',
+                        headers: {
+                           'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(request)
+                     }).then(response => {
+                        this.setAttribute("aria-busy", false)
+                        if (response.status !== 200) {
+                           response.text().then(function(text) {
+                              console.log(text)
+                              alert(`Не получилось сгенерировать статью: ${text}`)
+                           })
+
+                           return
+                        }
+                        response.json().then(function(response) {
+                           title.value = response["title"]
+                           content.value = response["content"]
+                        })
+
+                     }).catch(err => alert(`Не получилось отправить запрос на сервер ${err}`))
+                     .finally(() => this.setAttribute("aria-busy", false))
+               }
+
+               document.querySelectorAll(".article").forEach(el => {
+                  const id = el.getAttribute("data-uuid")
+
+                  const description = el.querySelector("h5").textContent
+
+                  el.querySelector("button.open").onclick = () => {
+                     window.open(`/article/${id}`, '_blank').focus();
+                  }
+
+                  el.querySelector("button.edit").addEventListener("click", function() {
+                     editArticle(id)
+                  })
+
+                  el.querySelector("button.delete").addEventListener("click", function() {
+                     fetch('/api/article', {
+                        method: 'DELETE',
+                        headers: {
+                           'Content-Type': 'text/plain'
+                        },
+                        body: id
+                     }).then(response => {
+                        if (response.status !== 200) {
+                           response.text().then(function(text) {
+                              alert(`Не получилось удалить статью: ${text}`)
+                           })
+                           return
+                        }
+
+                        location.reload();
+
+                     }).catch(err => alert(`Не получилось отправить запрос на сервер ${err}`))
+                  })
+               })
+
+               const generateImageBtn = document.querySelector("#generate-image")
+
+               generateImageBtn.onclick = (e) => {
+                  e.preventDefault()
+
+                  if (!title.value) {
+                     alert("Нет заголовка, не можем сгенерировать картинку")
+                     return
+                  }
+
+                  if (!content.value) {
+                     alert("Статья пустая, не можем сгенерировать картинку")
+                     return
+                  }
+
+                  const request = {
+                     "title": title.value,
+                     "content": content.value
+                  }
+
+                  generateImageBtn.setAttribute("aria-busy", true)
+
+                  fetch('/api/generate/image', {
+                        method: 'POST',
+                        headers: {
+                           'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(request)
+                     }).then(response => {
+                        if (response.status !== 200) {
+                           response.text().then(function(text) {
+                              alert(`Не получилось сгенерировать картинку: ${text}`)
+                           })
+                           return
+                        }
+
+                        response.json().then(function(response) {
+                           articleImage.src = response["image_base64"]
+                        })
+
+
+                     }).catch(err => alert(`Не получилось отправить запрос на сервер ${err}`))
+                     .finally(() => generateImageBtn.setAttribute("aria-busy", false))
+               }
+
+               saveArticleBtn.onclick = () => {
+                  if (!title.value) {
+                     alert("Нет заголовка")
+                     return
+                  }
+
+                  if (!content.value) {
+                     alert("Статья пустая")
+                     return
+                  }
+
+                  const request = {
+                     "title": title.value,
+                     "content": content.value,
+                     "image_base64": articleImage.src
+                  }
+
+                  fetch('/api/article', {
+                     method: 'POST',
+                     headers: {
+                        'Content-Type': 'application/json'
+                     },
+                     body: JSON.stringify(request)
+                  }).then(response => {
+                     if (response.status !== 201) {
+                        response.text().then(function(text) {
+                           alert(`Не получилось сохранить статью: ${text}`)
+                        })
+                        return
+                     }
+
+                     location.reload();
+                  }).catch(err => alert(`Не получилось отправить запрос на сервер ${err}`))
+               }
+            };
+          </script>
+       </head>
+       <body class="container">
+          <br>
+          <nav>
+             <ul>
+                <li>
+                   <h1>Добро пожаловать в AI-feed!</h1>
+                </li>
+             </ul>
+             <ul>
+                <li><a href="/articles">Статьи</a></li>
+                <li><a href="/themes">Темы</a></li>
+                <li><a href="/personalities">Личности</a></li>
+             </ul>
+          </nav>
+          <br>
+          <div>
+             <button class="container" id="create-article">Создать новую статью</button>
+             <br><br>
+             <div>
+                for _, article := range articles {
+                <article class="article" data-uuid={article.ID.String()}>
+                   <div class="grid">
+                      <h5>{article.Title}</h5>
+                      <div class="grid">
+                         <button class="open">Открыть</button>
+                         <button class="outline edit">Редактировать</button>
+                         <button class="outline secondary delete">Удалить</button>
+                      </div>
+                   </div>
+                </article>
+                }
+             </div>
+          </div>
+          <dialog id="create-dialog">
+             <article>
+                <header>
+                   <button aria-label="close" rel="prev" id="close-dialog"></button>
+                   <p>
+                      <strong>Новая статья</strong>
+                   </p>
+                </header>
+                <p>
+                   <u>Создание новой статьи</u>
+                </p>
+                <form id="create-form">
+                   <label>
+                      Тема
+                      <select id="select-theme" name="theme" aria-label="Выберите тему..." required>
+                         <option selected disabled value="">
+                            Выберите тему...
+                         </option>
+                         for _, theme := range themes {
+                         <option>{theme.Description}</option>
+                         }
+                      </select>
+                   </label>
+                   <label>
+                      Автор
+                      <select id="select-personality" name="personality" aria-label="Выберите автора..." required>
+                         <option selected disabled value="">
+                            Выберите личность...
+                         </option>
+                         for _, personality := range personalities {
+                         <option data-bio={personality.Biography}
+                            data-keywords={personality.Keywords}
+                            data-thematics={personality.Thematics}
+                            data-text-style={personality.TextStyle}
+                            >{personality.Name}</option>
+                         }
+                      </select>
+                   </label>
+                   <label>
+                   Заголовок статьи
+                   <input id="article-title" type="text" name="title" placeholder="Кликбейтный заголовок 1" value="">
+                   </label>
+                   <label>
+                   Текст статьи
+                   <textarea id="article-content" name="content"
+                      rows="10"
+                      placeholder="Напишите или сгенерируйте статью"
+                      aria-label="Напишите или сгенерируйте статью"></textarea>
+                   </label>
+                   <button id="generate-content" class="outline">Сгенерировать статью </button>
+                   <br><br>
+                   <img id="article-image">
+                   <br><br>
+                   <button id="generate-image" class="outline">Сгенерировать изображение</button>
+                   <br>
+                </form>
+                <footer>
+                   <button id="save-article-btn">Создать</button>
+                </footer>
+             </article>
+          </dialog>
+       </body>
+    </html>
+}
