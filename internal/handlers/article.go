@@ -135,6 +135,15 @@ func (h *HTTP) GetArticlesPage(c fiber.Ctx) error {
 	templArticles := make([]*views.Article, 0, len(articles))
 
 	for _, article := range articles {
+		keywords := make([]*views.Keyword, 0, len(article.Keywords))
+
+		for _, el := range article.Keywords {
+			keywords = append(keywords, &views.Keyword{
+				Name:  el.Name,
+				Count: fmt.Sprint(el.Count),
+			})
+		}
+
 		templArticles = append(templArticles, &views.Article{
 			ID:           article.ID,
 			Title:        article.Title,
@@ -142,6 +151,7 @@ func (h *HTTP) GetArticlesPage(c fiber.Ctx) error {
 			Content:      article.Content,
 			WordsCount:   fmt.Sprint(article.WordsCount),
 			SymbolsCount: fmt.Sprint(article.SymbolsCount),
+			Keywords:     keywords,
 		})
 	}
 

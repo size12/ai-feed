@@ -7,8 +7,8 @@ import (
 )
 
 type Keyword struct {
-	Name  string
-	Count int
+	Name  string `json:"name"`
+	Count int    `json:"count"`
 }
 
 type Keywords []*Keyword
