@@ -2,12 +2,22 @@ package views
 
 import "github.com/google/uuid"
 
+type Keyword struct {
+    Name string
+    Count string
+}
+
 type Article struct {
     ID uuid.UUID
 
 	Title       string
     ImageBase64 string
     Content     string
+
+    WordsCount string
+    SymbolsCount string
+
+    Keywords []*Keyword
 }
 
 templ NewArticles(articles []*Article, themes []*Theme, personalities []*Personality) {
@@ -362,6 +372,22 @@ templ NewArticles(articles []*Article, themes []*Theme, personalities []*Persona
                          <button class="open">Открыть</button>
                          <button class="outline edit">Редактировать</button>
                          <button class="outline secondary delete">Удалить</button>
+                         <button class="outline secondary delete">Удалить</button>
+                         <details>
+                          <summary>Аналитика</summary>
+                          <ul>
+                            <li> Количество слов - {article.WordsCount}</li>
+                            <li> Количество символов - {article.SymbolsCount}</li>
+                            <li>
+                                <p>Ключевые слова</p>
+                                <ol>
+                                for _, el := range article.Keywords {
+                                    <p>{el.Name} - {el.Count}</p>
+                                }
+                                </ol>
+                            </li>
+                          </ul>
+                          </details>
                       </div>
                    </div>
                 </article>

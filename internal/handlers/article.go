@@ -5,6 +5,7 @@ import (
 	"ai-feed/internal/storage"
 	"ai-feed/templates/views"
 	"errors"
+	"fmt"
 	"github.com/gofiber/fiber/v3"
 	"github.com/google/uuid"
 	"html/template"
@@ -135,10 +136,12 @@ func (h *HTTP) GetArticlesPage(c fiber.Ctx) error {
 
 	for _, article := range articles {
 		templArticles = append(templArticles, &views.Article{
-			ID:          article.ID,
-			Title:       article.Title,
-			ImageBase64: article.ImageBase64,
-			Content:     article.Content,
+			ID:           article.ID,
+			Title:        article.Title,
+			ImageBase64:  article.ImageBase64,
+			Content:      article.Content,
+			WordsCount:   fmt.Sprint(article.WordsCount),
+			SymbolsCount: fmt.Sprint(article.SymbolsCount),
 		})
 	}
 

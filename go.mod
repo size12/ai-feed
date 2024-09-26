@@ -12,7 +12,7 @@ require (
 	github.com/google/uuid v1.6.0
 	github.com/parnurzeal/gorequest v0.3.0
 	github.com/rs/zerolog v1.33.0
-	github.com/sashabaranov/go-openai v1.29.1
+	github.com/sashabaranov/go-openai v1.30.3
 	github.com/tidwall/gjson v1.17.3
 	gopkg.in/yaml.v3 v3.0.1
 	gorm.io/driver/postgres v1.5.9
