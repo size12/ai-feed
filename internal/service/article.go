@@ -18,9 +18,6 @@ func (service *AiFeed) CreateArticle(ctx context.Context, article *entity.Articl
 func (service *AiFeed) ReadArticle(ctx context.Context, ID uuid.UUID) (*entity.Article, error) {
 	log.Info().Interface("id", ID).Msg("read article")
 
-	a, _ := service.articles.Read(ctx, ID)
-	log.Info().Interface("1", a).Msg("")
-
 	return service.articles.Read(ctx, ID)
 }
 

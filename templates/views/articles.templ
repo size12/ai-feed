@@ -346,10 +346,6 @@ templ NewArticles(articles []*Article, themes []*Theme, personalities []*Persona
                      location.reload();
                   }).catch(err => alert(`Не получилось отправить запрос на сервер ${err}`))
                }
-
-               metricsBtn.onclick = () => {
-               alert("works!")
-               }
             };
           </script>
        </head>
@@ -452,6 +448,10 @@ templ NewArticles(articles []*Article, themes []*Theme, personalities []*Persona
                       rows="10"
                       placeholder="Напишите или сгенерируйте статью"
                       aria-label="Напишите или сгенерируйте статью"></textarea>
+                   </label>
+                   <label>
+                   Количество слов
+                   <input id="words-count" type="number" name="words" placeholder="200" value="200">
                    </label>
                    <button id="generate-content" class="outline">Сгенерировать статью </button>
                    <br><br>

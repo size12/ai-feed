@@ -20,7 +20,7 @@ var detectLanguages = []lingua.Language{
 
 var letterPattern = regexp.MustCompile("[a-zA-Zа-яА-Я]+")
 
-var detector = lingua.NewLanguageDetectorBuilder().
+var languageDetector = lingua.NewLanguageDetectorBuilder().
 	FromLanguages(detectLanguages...).
 	Build()
 
@@ -36,7 +36,7 @@ func init() {
 		Get("https://raw.githubusercontent.com/stopwords-iso/stopwords-ru/master/stopwords-ru.txt").End()
 
 	if len(errs) > 0 {
-		log.Fatal().Interface("errors", errs)
+		log.Fatal().Interface("errors", errs).Msg("Failed fetch russian stop list")
 	}
 
 	words := strings.Fields(body)
@@ -47,7 +47,7 @@ func init() {
 		Get("https://raw.githubusercontent.com/stopwords-iso/stopwords-ru/master/stopwords-ru.txt").End()
 
 	if len(errs) > 0 {
-		log.Fatal().Interface("errors", errs)
+		log.Fatal().Interface("errors", errs).Msg("Failed fetch english stop list")
 	}
 
 	words = strings.Fields(body)
@@ -56,7 +56,7 @@ func init() {
 
 func Keywords(text string) entity.Keywords {
 	// detect text language
-	language, exists := detector.DetectLanguageOf(text)
+	language, exists := languageDetector.DetectLanguageOf(text)
 
 	if !exists {
 		return nil
@@ -74,13 +74,13 @@ func Keywords(text string) entity.Keywords {
 	case "RU":
 		pack = ru.New()
 		stopWords = russianStopWords
-
+	// unknown language
 	default:
 		return nil
 	}
 
 	// lemmatize all words in text (aligning -> align)
-	// and put them in lowercase
+	// put them in lowercase
 
 	lemmatizer, err := golem.New(pack)
 	if err != nil {
@@ -96,27 +96,35 @@ func Keywords(text string) entity.Keywords {
 		words[i] = word
 	}
 
-	// delete words which are in stop words list
+	// delete words which are in stop words list, and which length <= 3
 
 	filteredWords := make([]string, 0, len(words))
 
 	for _, word := range words {
-		if !slices.Contains(stopWords, word) {
-			filteredWords = append(filteredWords, word)
+		if slices.Contains(stopWords, word) {
+			continue
 		}
+
+		if len(word) <= 3 {
+			continue
+		}
+
+		filteredWords = append(filteredWords, word)
 	}
 
 	words = filteredWords
 
-	counts := make(map[string]int)
+	// caluculate words frequency
+
+	frequency := make(map[string]int)
 
 	for _, word := range words {
-		counts[word] += 1
+		frequency[word] += 1
 	}
 
-	result := make([]*entity.Keyword, 0, len(counts))
+	result := make([]*entity.Keyword, 0, len(frequency))
 
-	for key, value := range counts {
+	for key, value := range frequency {
 		result = append(result, &entity.Keyword{
 			Name:  key,
 			Count: value,
@@ -126,6 +134,11 @@ func Keywords(text string) entity.Keywords {
 	slices.SortFunc(result, func(a, b *entity.Keyword) int {
 		return b.Count - a.Count
 	})
+
+	// save only top 10 words
+	if len(result) > 10 {
+		result = result[:10]
+	}
 
 	return result
 }
