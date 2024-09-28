@@ -6,8 +6,17 @@ import (
 	"ai-feed/templates/views"
 	"errors"
 	"github.com/gofiber/fiber/v3"
+	"time"
 )
 
+// @Summary		AuthUser
+// @Description	Login by credentials, or create new user. Set auth cookie: token={received_token}
+// @Tags			auth
+// @ID				auth-user
+// @Accept			json
+// @Produce		json
+// @Param			input	body	entity.User	true	"account credentials"
+// @Router			/auth [post]
 func (h *HTTP) AuthUser(c fiber.Ctx) error {
 	credentials := &entity.User{}
 
@@ -30,6 +39,14 @@ func (h *HTTP) AuthUser(c fiber.Ctx) error {
 			"msg":    err.Error(),
 		})
 	}
+
+	cookie := &fiber.Cookie{
+		Name:    "token",
+		Value:   token,
+		Expires: time.Now().Add(7 * 24 * time.Hour),
+	}
+
+	c.Cookie(cookie)
 
 	return c.Status(fiber.StatusOK).JSON(&fiber.Map{
 		"status": "ok",

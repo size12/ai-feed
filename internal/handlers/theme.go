@@ -9,6 +9,15 @@ import (
 	"github.com/google/uuid"
 )
 
+//	@Summary		CreateTheme
+//	@Description	Creates theme
+//	@Security		header
+//	@Tags			theme
+//	@ID				create-theme
+//	@Accept			json
+//	@Produce		text/plain
+//	@Param			input	body	entity.Theme	true	"theme description"
+//	@Router			/theme [post]
 func (h *HTTP) CreateTheme(c fiber.Ctx) error {
 	theme := &entity.Theme{}
 
@@ -24,6 +33,13 @@ func (h *HTTP) CreateTheme(c fiber.Ctx) error {
 	return c.Status(fiber.StatusCreated).Send(nil)
 }
 
+//	@Summary		ReadUserThemes
+//	@Description	Read user themes
+//	@Security		header
+//	@Tags			theme
+//	@ID				read-themes
+//	@Produce		json
+//	@Router			/theme [get]
 func (h *HTTP) ReadAllThemes(c fiber.Ctx) error {
 	themes, err := h.service.ReadAllThemes(c.UserContext())
 	if err != nil {
@@ -33,6 +49,12 @@ func (h *HTTP) ReadAllThemes(c fiber.Ctx) error {
 	return c.Status(fiber.StatusOK).JSON(themes)
 }
 
+//	@Summary		ReadFeederThemes
+//	@Description	Read feeder themes
+//	@Tags			theme
+//	@ID				read-feeder-themes
+//	@Produce		json
+//	@Router			/theme/feeder [get]
 func (h *HTTP) ReadFeederThemes(c fiber.Ctx) error {
 	themes, err := h.service.ReadFeederThemes(c.UserContext())
 	if err != nil {
@@ -42,6 +64,15 @@ func (h *HTTP) ReadFeederThemes(c fiber.Ctx) error {
 	return c.Status(fiber.StatusOK).JSON(themes)
 }
 
+//	@Summary		UpdateTheme
+//	@Description	Updated theme
+//	@Security		header
+//	@Tags			theme
+//	@ID				update-theme
+//	@Accept			json
+//	@Produce		text/plain
+//	@Param			input	body	entity.Theme	true	"theme new description"
+//	@Router			/theme [put]
 func (h *HTTP) UpdateTheme(c fiber.Ctx) error {
 	theme := &entity.Theme{}
 
@@ -57,6 +88,15 @@ func (h *HTTP) UpdateTheme(c fiber.Ctx) error {
 	return c.Status(fiber.StatusAccepted).Send(nil)
 }
 
+//	@Summary		DeleteTheme
+//	@Description	Deletes theme
+//	@Security		header
+//	@Tags			theme
+//	@ID				delete-theme
+//	@Accept			text/plain
+//	@Produce		text/plain
+//	@Param			input	body	string	true	"theme ID"
+//	@Router			/theme [delete]
 func (h *HTTP) DeleteTheme(c fiber.Ctx) error {
 	id, err := uuid.ParseBytes(c.Body())
 	if err != nil {
