@@ -1,6 +1,8 @@
 FROM golang:alpine
 
-ADD . .
+ADD . /build
+
+WORKDIR /build
 
 RUN go build -o service cmd/feed/main.go
 CMD ["./service"]
