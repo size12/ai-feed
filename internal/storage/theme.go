@@ -3,7 +3,6 @@ package storage
 import (
 	"ai-feed/internal/entity"
 	"context"
-	"fmt"
 	"github.com/google/uuid"
 	"github.com/rs/zerolog/log"
 	"gorm.io/gorm"
@@ -43,6 +42,9 @@ func newThemeImpl(db *gorm.DB, cfg *Config) *themeImpl {
 }
 
 func (t *themeImpl) Create(ctx context.Context, theme *entity.Theme) error {
+	login := ctx.Value(UserLogin).(string)
+	theme.OwnerLogin = login
+
 	if theme.ID.ID() == 0 {
 		theme.ID = uuid.New()
 	}
@@ -62,9 +64,11 @@ func (t *themeImpl) Create(ctx context.Context, theme *entity.Theme) error {
 }
 
 func (t *themeImpl) ReadAll(ctx context.Context) ([]*entity.Theme, error) {
+	login := ctx.Value(UserLogin).(string)
+
 	var themes []*entity.Theme
 
-	result := t.db.Model(&entity.Theme{}).Order("created_at DESC").Where("deleted = FALSE").Find(&themes)
+	result := t.db.Model(&entity.Theme{}).Order("created_at DESC").Where("deleted = FALSE AND owner_login = ?", login).Find(&themes)
 
 	if result.Error != nil {
 		log.Err(result.Error).Msg("failed read all themes from db")
@@ -75,7 +79,9 @@ func (t *themeImpl) ReadAll(ctx context.Context) ([]*entity.Theme, error) {
 }
 
 func (t *themeImpl) Update(ctx context.Context, theme *entity.Theme) error {
-	result := t.db.Model(&entity.Theme{}).Where("id = ?", theme.ID).Updates(theme)
+	login := ctx.Value(UserLogin).(string)
+
+	result := t.db.Model(&entity.Theme{}).Where("id = ? AND owner_login = ?", theme.ID, login).Updates(theme)
 
 	if result.Error != nil {
 		log.Err(result.Error).Interface("theme", theme).Msg("failed update theme in db")
@@ -90,7 +96,9 @@ func (t *themeImpl) Update(ctx context.Context, theme *entity.Theme) error {
 }
 
 func (t *themeImpl) Delete(ctx context.Context, ID uuid.UUID) error {
-	result := t.db.Model(&entity.Theme{}).Where("id = ?", ID).Update("deleted", true)
+	login := ctx.Value(UserLogin).(string)
+
+	result := t.db.Model(&entity.Theme{}).Where("id = ? AND owner_login = ?", ID, login).Update("deleted", true)
 
 	if result.Error != nil {
 		log.Err(result.Error).Str("theme_id", ID.String()).Msg("failed delete theme from db")
@@ -130,6 +138,7 @@ func (t *themeImpl) run() {
 		var ids []uuid.UUID
 
 		err := t.db.Model(&entity.Theme{}).
+			Where("owner_login = feeder").
 			Where("deleted = FALSE").
 			Order("created_at DESC").
 			Limit(int(t.cfg.ThemesActualCount)).Pluck("id", &ids).Error
@@ -139,9 +148,8 @@ func (t *themeImpl) run() {
 			continue
 		}
 
-		fmt.Println(ids, t.cfg.ThemesActualCount)
-
 		result := t.db.Model(&entity.Theme{}).
+			Where("owner_login = feeder").
 			Where("id NOT IN ?", ids).
 			Where("deleted = FALSE").
 			UpdateColumn("deleted", true)

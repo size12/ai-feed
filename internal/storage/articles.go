@@ -33,6 +33,9 @@ func newArticleImpl(db *gorm.DB) *articleImpl {
 }
 
 func (a *articleImpl) Create(ctx context.Context, article *entity.Article) error {
+	login := ctx.Value(UserLogin).(string)
+	article.OwnerLogin = login
+
 	if article.ID.ID() == 0 {
 		article.ID = uuid.New()
 	}
@@ -52,9 +55,11 @@ func (a *articleImpl) Create(ctx context.Context, article *entity.Article) error
 }
 
 func (a *articleImpl) ReadAll(ctx context.Context) ([]*entity.Article, error) {
+	login := ctx.Value(UserLogin).(string)
+
 	var articles []*entity.Article
 
-	result := a.db.Order("created_at DESC").Find(&articles)
+	result := a.db.Where("owner_login = ?", login).Order("created_at DESC").Find(&articles)
 
 	if result.Error != nil {
 		log.Err(result.Error).Msg("failed read all articles from db")
@@ -82,7 +87,9 @@ func (a *articleImpl) Read(ctx context.Context, ID uuid.UUID) (*entity.Article, 
 }
 
 func (a *articleImpl) Update(ctx context.Context, article *entity.Article) error {
-	result := a.db.Model(&entity.Article{}).Where("id = ?", article.ID).Updates(article)
+	login := ctx.Value(UserLogin).(string)
+
+	result := a.db.Model(&entity.Article{}).Where("id = ? AND owner_login = ?", article.ID, login).Updates(article)
 
 	if result.Error != nil {
 		log.Err(result.Error).Interface("article", article).Msg("failed update article in db")
@@ -97,9 +104,11 @@ func (a *articleImpl) Update(ctx context.Context, article *entity.Article) error
 }
 
 func (a *articleImpl) Delete(ctx context.Context, ID uuid.UUID) error {
+	login := ctx.Value(UserLogin).(string)
+
 	article := &entity.Article{}
 
-	result := a.db.Where("id = ?", ID).Delete(article)
+	result := a.db.Where("id = ? AND owner_login = ?", ID, login).Delete(article)
 
 	if result.Error != nil {
 		log.Err(result.Error).Str("article_id", ID.String()).Msg("failed delete article from db")

@@ -8,7 +8,7 @@ type Theme struct {
 	Description string
 }
 
-templ NewThemes(themes []*Theme) {
+templ NewThemes(themes []*Theme, feederThemes []*Theme) {
     <!DOCTYPE html>
     <html lang="ru">
        <head>
@@ -176,19 +176,34 @@ templ NewThemes(themes []*Theme) {
           <div>
              <button class="container" id="create-theme">Создать новую тему</button>
              <br><br>
+             if len(themes) > 0 {
+             <h5><mark>Мои темы</mark></h5>
              <div>
-                for _, theme := range themes {
-                <article class="theme" data-uuid={theme.ID.String()}>
-                   <div class="grid">
-                      <h5>{theme.Description}</h5>
-                      <div class="grid">
-                         <button class="outline edit">Редактировать</button>
-                         <button class="outline secondary delete">Удалить</button>
-                      </div>
-                   </div>
-                </article>
-                }
+                 for _, theme := range themes {
+                 <article class="theme" data-uuid={theme.ID.String()}>
+                    <div class="grid">
+                       <h5>{theme.Description}</h5>
+                       <div class="grid">
+                          <button class="outline edit">Редактировать</button>
+                          <button class="outline secondary delete">Удалить</button>
+                       </div>
+                    </div>
+                 </article>
+                 }
              </div>
+             }
+             <h5><mark>Актуальные темы с интернета</mark></h5>
+             if len(feederThemes) > 0 {
+                <div>
+                     for _, theme := range feederThemes {
+                     <article class="theme" data-uuid={theme.ID.String()}>
+                        <div class="grid">
+                           <h5>{theme.Description}</h5>
+                        </div>
+                     </article>
+                     }
+                </div>
+             }
           </div>
        </body>
     </html>

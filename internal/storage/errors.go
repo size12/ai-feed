@@ -7,4 +7,5 @@ var (
 	ErrNotFound      = errors.New("not found")
 	ErrFailedUpdate  = errors.New("failed update")
 	ErrAlreadyExists = errors.New("already exists")
+	ErrUnauthorized  = errors.New("unauthorized")
 )

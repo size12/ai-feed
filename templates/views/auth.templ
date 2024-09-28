@@ -1,0 +1,80 @@
+package views
+
+templ NewAuth() {
+    <!DOCTYPE html>
+        <html lang="ru">
+            <head>
+                <meta charset="UTF-8">
+                <title>Вход</title>
+                <link
+                        rel="stylesheet"
+                        href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css"
+                >
+            </head>
+        <script>
+            function validateForm(formData) {
+                for (let [key, val] of formData.entries()) {
+                   if (val === "") {
+                      alert(`Поле '${key}' не должно быть пустым`)
+                      return false
+                   }
+                }
+
+                return true
+            }
+
+            window.onload = () => {
+                document.querySelector("#auth-button").onclick = function(event) {
+                   event.preventDefault()
+
+                   const form = document.querySelector("form")
+                   const formData = new FormData(form);
+
+                   if (!validateForm(formData)) {
+                      return
+                   }
+
+                   let obj = Object.fromEntries(formData)
+
+                   const json = JSON.stringify(obj);
+
+                   console.log(json)
+
+                   fetch('/api/auth', {
+                      method: "post",
+                      headers: {
+                         'Content-Type': 'application/json'
+                      },
+                      body: json
+                   }).then(response => {
+                     response.json().then(function(result) {
+                        if (result["status"] === "error") {
+                            alert(result["msg"])
+                            return
+                        }
+
+                        if (result["status"] !== "ok") {
+                            alert("Получили неизвестный статус")
+                            return
+                        }
+
+                        document.cookie = `token=${result["token"]}`
+                        window.location.href="/articles"
+                     })
+
+                   }).catch(err => alert(`Не получилось отправить запрос на сервер ${err}`))
+                }
+            }
+        </script>
+        <body class="container">
+            <br>
+            <h1>Авторизация в системе AI-Feed</h1>
+            <form>
+                <input type="text" name="login" placeholder="Логин" aria-label="login">
+                <input type="password" name="password" placeholder="Пароль" aria-label="password">
+                <br><br>
+                <button id="auth-button">Вход / Регистрация</button>
+            </form>
+        </body>
+    </html>
+}

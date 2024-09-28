@@ -16,7 +16,7 @@ func (h *HTTP) CreateTheme(c fiber.Ctx) error {
 		return err
 	}
 
-	err := h.service.CreateTheme(c.Context(), theme)
+	err := h.service.CreateTheme(c.UserContext(), theme)
 	if err != nil {
 		return fiber.NewError(fiber.StatusInternalServerError, "failed create theme")
 	}
@@ -25,7 +25,16 @@ func (h *HTTP) CreateTheme(c fiber.Ctx) error {
 }
 
 func (h *HTTP) ReadAllThemes(c fiber.Ctx) error {
-	themes, err := h.service.ReadAllThemes(c.Context())
+	themes, err := h.service.ReadAllThemes(c.UserContext())
+	if err != nil {
+		return fiber.NewError(fiber.StatusInternalServerError, "failed get themes")
+	}
+
+	return c.Status(fiber.StatusOK).JSON(themes)
+}
+
+func (h *HTTP) ReadFeederThemes(c fiber.Ctx) error {
+	themes, err := h.service.ReadFeederThemes(c.UserContext())
 	if err != nil {
 		return fiber.NewError(fiber.StatusInternalServerError, "failed get themes")
 	}
@@ -40,7 +49,7 @@ func (h *HTTP) UpdateTheme(c fiber.Ctx) error {
 		return err
 	}
 
-	err := h.service.UpdateTheme(c.Context(), theme)
+	err := h.service.UpdateTheme(c.UserContext(), theme)
 	if err != nil {
 		return fiber.NewError(fiber.StatusInternalServerError, "failed update theme")
 	}
@@ -54,7 +63,7 @@ func (h *HTTP) DeleteTheme(c fiber.Ctx) error {
 		return fiber.ErrBadRequest
 	}
 
-	err = h.service.DeleteTheme(c.Context(), id)
+	err = h.service.DeleteTheme(c.UserContext(), id)
 
 	if errors.Is(err, storage.ErrNotFound) {
 		return fiber.ErrNotFound
@@ -68,7 +77,12 @@ func (h *HTTP) DeleteTheme(c fiber.Ctx) error {
 }
 
 func (h *HTTP) GetThemesPage(c fiber.Ctx) error {
-	themes, err := h.service.ReadAllThemes(c.Context())
+	themes, err := h.service.ReadAllThemes(c.UserContext())
+	if err != nil {
+		return fiber.ErrInternalServerError
+	}
+
+	feederThemes, err := h.service.ReadFeederThemes(c.UserContext())
 	if err != nil {
 		return fiber.ErrInternalServerError
 	}
@@ -82,7 +96,16 @@ func (h *HTTP) GetThemesPage(c fiber.Ctx) error {
 		})
 	}
 
+	templFeederThemes := make([]*views.Theme, 0, len(feederThemes))
+
+	for _, theme := range feederThemes {
+		templFeederThemes = append(templFeederThemes, &views.Theme{
+			ID:          theme.ID,
+			Description: theme.Description,
+		})
+	}
+
 	c.Set("Content-Type", "text/html")
 
-	return views.NewThemes(templThemes).Render(c.Context(), c.Response().BodyWriter())
+	return views.NewThemes(templThemes, templFeederThemes).Render(c.UserContext(), c.Response().BodyWriter())
 }
