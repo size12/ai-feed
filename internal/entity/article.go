@@ -8,6 +8,8 @@ import (
 type Article struct {
 	ID uuid.UUID `gorm:"type:uuid;primaryKey;" json:"id"`
 
+	OwnerLogin string `json:"-"`
+
 	CreatedAt time.Time `gorm:"autoUpdateTime" json:"created_at"`
 
 	Title       string `json:"title" validate:"required"`

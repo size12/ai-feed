@@ -10,25 +10,25 @@ import (
 
 func (service *AiFeed) CreateArticle(ctx context.Context, article *entity.Article) error {
 	updateMetrics(article)
-	log.Info().Interface("article", article).Msg("create article")
+	log.Info().Interface("article_id", article.ID).Msg("create article")
 
 	return service.articles.Create(ctx, article)
 }
 
 func (service *AiFeed) ReadArticle(ctx context.Context, ID uuid.UUID) (*entity.Article, error) {
 	log.Info().Interface("id", ID).Msg("read article")
-
 	return service.articles.Read(ctx, ID)
 }
 
 func (service *AiFeed) ReadAllArticles(ctx context.Context) ([]*entity.Article, error) {
-	log.Info().Msg("read all articles")
+	log.Info().Msg("read all Articles")
 	return service.articles.ReadAll(ctx)
 }
 
 func (service *AiFeed) UpdateArticle(ctx context.Context, article *entity.Article) error {
 	updateMetrics(article)
 	log.Info().Interface("article", article).Msg("update article")
+
 	return service.articles.Update(ctx, article)
 }
 

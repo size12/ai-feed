@@ -151,7 +151,7 @@ func (ai *AI) GenerateArticleImage(ctx context.Context, article *entity.Article)
 	}
 
 	prompt := resp.Choices[0].Message.Content
-	log.Info().Msgf("generating image with prompt: %s", prompt)
+	log.Info().Msgf("generating image with prompt: %s and model %s", prompt, ai.imageModel)
 
 	imageRequest := openai.ImageRequest{
 		Model:          ai.imageModel,

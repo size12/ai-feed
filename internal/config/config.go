@@ -3,6 +3,7 @@ package config
 import (
 	"ai-feed/internal/app"
 	"ai-feed/internal/generator"
+	"ai-feed/internal/service"
 	"ai-feed/internal/service/feeder"
 	"ai-feed/internal/storage"
 	"flag"
@@ -18,6 +19,7 @@ type Config struct {
 	AI      *generator.Config `yaml:"ai"`
 	Storage *storage.Config   `yaml:"storage"`
 	Feeder  *feeder.Config    `yaml:"feeder"`
+	Service *service.Config   `yaml:"service"`
 }
 
 var (
@@ -41,7 +43,7 @@ func ParseConfig() *Config {
 		}
 
 		if err = validateConfig(cfg); err != nil {
-			log.Fatal().Err(err).Msg("fonfig is not valid")
+			log.Fatal().Err(err).Msg("config is not valid")
 		}
 	})
 

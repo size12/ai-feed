@@ -19,7 +19,7 @@ func (h *HTTP) CreateArticle(c fiber.Ctx) error {
 		return err
 	}
 
-	err := h.service.CreateArticle(c.Context(), article)
+	err := h.service.CreateArticle(c.UserContext(), article)
 	if err != nil {
 		return fiber.NewError(fiber.StatusInternalServerError, "failed create article")
 	}
@@ -31,8 +31,10 @@ func (h *HTTP) ReadArticles(c fiber.Ctx) error {
 	idStr := c.Query("id")
 	c.Set("Content-Type", "application/json")
 
+	fmt.Println(c.UserContext().Value(storage.UserLogin))
+
 	if idStr == "" {
-		articles, err := h.service.ReadAllArticles(c.Context())
+		articles, err := h.service.ReadAllArticles(c.UserContext())
 		if err != nil {
 			return fiber.NewError(fiber.StatusInternalServerError, "failed get articles")
 		}
@@ -45,7 +47,7 @@ func (h *HTTP) ReadArticles(c fiber.Ctx) error {
 		return fiber.ErrBadRequest
 	}
 
-	article, err := h.service.ReadArticle(c.Context(), id)
+	article, err := h.service.ReadArticle(c.UserContext(), id)
 	if err != nil {
 		return fiber.NewError(fiber.StatusInternalServerError, "failed get articles")
 	}
@@ -60,7 +62,7 @@ func (h *HTTP) UpdateArticle(c fiber.Ctx) error {
 		return err
 	}
 
-	err := h.service.UpdateArticle(c.Context(), article)
+	err := h.service.UpdateArticle(c.UserContext(), article)
 	if err != nil {
 		return fiber.NewError(fiber.StatusInternalServerError, "failed update article")
 	}
@@ -74,7 +76,7 @@ func (h *HTTP) DeleteArticle(c fiber.Ctx) error {
 		return fiber.ErrBadRequest
 	}
 
-	err = h.service.DeleteArticle(c.Context(), id)
+	err = h.service.DeleteArticle(c.UserContext(), id)
 
 	if errors.Is(err, storage.ErrNotFound) {
 		return fiber.ErrNotFound
@@ -87,18 +89,18 @@ func (h *HTTP) DeleteArticle(c fiber.Ctx) error {
 	return c.Status(fiber.StatusOK).Send(nil)
 }
 
-func (h *HTTP) GetArticle(c fiber.Ctx) error {
+func (h *HTTP) GetArticlePage(c fiber.Ctx) error {
 	c.Set("Content-Type", "text/html")
 
 	id, err := uuid.Parse(c.Params("id"))
 	if err != nil {
-		return views.NotFoundArticle().Render(c.Context(), c.Response().BodyWriter())
+		return views.NotFoundArticle().Render(c.UserContext(), c.Response().BodyWriter())
 	}
 
-	article, err := h.service.ReadArticle(c.Context(), id)
+	article, err := h.service.ReadArticle(c.UserContext(), id)
 
 	if errors.Is(err, storage.ErrNotFound) {
-		return views.NotFoundArticle().Render(c.Context(), c.Response().BodyWriter())
+		return views.NotFoundArticle().Render(c.UserContext(), c.Response().BodyWriter())
 	}
 
 	if err != nil {
@@ -113,21 +115,26 @@ func (h *HTTP) GetArticle(c fiber.Ctx) error {
 		Content:     content,
 	}
 
-	return views.NewShownArticle(articleTempl).Render(c.Context(), c.Response().BodyWriter())
+	return views.NewShownArticle(articleTempl).Render(c.UserContext(), c.Response().BodyWriter())
 }
 
 func (h *HTTP) GetArticlesPage(c fiber.Ctx) error {
-	articles, err := h.service.ReadAllArticles(c.Context())
+	articles, err := h.service.ReadAllArticles(c.UserContext())
 	if err != nil {
 		return fiber.ErrInternalServerError
 	}
 
-	themes, err := h.service.ReadAllThemes(c.Context())
+	themes, err := h.service.ReadAllThemes(c.UserContext())
 	if err != nil {
 		return fiber.ErrInternalServerError
 	}
 
-	personalities, err := h.service.ReadAllPersonalities(c.Context())
+	feederThemes, err := h.service.ReadFeederThemes(c.UserContext())
+	if err != nil {
+		return fiber.ErrInternalServerError
+	}
+
+	personalities, err := h.service.ReadAllPersonalities(c.UserContext())
 	if err != nil {
 		return fiber.ErrInternalServerError
 	}
@@ -164,6 +171,15 @@ func (h *HTTP) GetArticlesPage(c fiber.Ctx) error {
 		})
 	}
 
+	templFeederThemes := make([]*views.Theme, 0, len(feederThemes))
+
+	for _, theme := range feederThemes {
+		templFeederThemes = append(templFeederThemes, &views.Theme{
+			ID:          theme.ID,
+			Description: theme.Description,
+		})
+	}
+
 	templPersonalities := make([]*views.Personality, 0, len(personalities))
 
 	for _, el := range personalities {
@@ -179,5 +195,5 @@ func (h *HTTP) GetArticlesPage(c fiber.Ctx) error {
 
 	c.Set("Content-Type", "text/html")
 
-	return views.NewArticles(templArticles, templThemes, templPersonalities).Render(c.Context(), c.Response().BodyWriter())
+	return views.NewArticles(templArticles, templThemes, templFeederThemes, templPersonalities).Render(c.UserContext(), c.Response().BodyWriter())
 }

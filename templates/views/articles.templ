@@ -23,7 +23,7 @@ type Article struct {
     Keywords []*Keyword
 }
 
-templ NewArticles(articles []*Article, themes []*Theme, personalities []*Personality) {
+templ NewArticles(articles []*Article, themes []*Theme, feederThemes []*Theme, personalities []*Personality) {
     <!DOCTYPE html>
     <html lang="ru">
        <head>
@@ -163,7 +163,6 @@ templ NewArticles(articles []*Article, themes []*Theme, personalities []*Persona
                const content = dialogElement.querySelector("#article-content")
                const articleImage = dialogElement.querySelector("#article-image")
                const saveArticleBtn = dialogElement.querySelector("#save-article-btn")
-               const metricsBtn = dialogElement.querySelector(".metrics")
 
                document.querySelector("#create-article").onclick = function() {
                   dialogElement.open = true;
@@ -368,36 +367,35 @@ templ NewArticles(articles []*Article, themes []*Theme, personalities []*Persona
              <button class="container" id="create-article">Создать новую статью</button>
              <br><br>
              <div>
-                for _, article := range articles {
-
-                   <article class="article" data-uuid={article.ID.String()}>
-                   <details open>
-                     <summary>
+             for _, article := range articles {
+                <article class="article" data-uuid={article.ID.String()}>
+                <details open>
+                  <summary>
+                   <div class="grid">
+                      <h5><mark>{article.Title}</mark></h5>
                       <div class="grid">
-                         <h5><mark>{article.Title}</mark></h5>
-                         <div class="grid">
-                            <button class="open">Открыть</button>
-                            <button class="outline secondary delete">Удалить</button>
-                            <button class="outline edit">Редактировать</button>
-                         </div>
+                         <button class="open">Открыть</button>
+                         <button class="outline secondary delete">Удалить</button>
+                         <button class="outline edit">Редактировать</button>
                       </div>
-                      </summary>
-                      <h5><mark>Аналитика:</mark></h5>
-                      <ul>
-                      <li><h6>Количество слов - <i>{article.WordsCount}</i></h6></li>
-                      <li><h6>Количество символов - <i>{article.SymbolsCount}</i></h6></li>
-                      <li>
-                      <div>
-                        <h6>Ключевые слова</h6>
-                          for index, el := range article.Keywords {
-                              <p>{fmt.Sprint(index + 1)}. {el.Name} - <i>{el.Count}</i></p>
-                          }
-                      </div>
-                      </li>
-                      </ul>
-                    </details>
-                   </article>
-                }
+                   </div>
+                   </summary>
+                   <h5><mark>Аналитика:</mark></h5>
+                   <ul>
+                   <li><h6>Количество слов - <i>{article.WordsCount}</i></h6></li>
+                   <li><h6>Количество символов - <i>{article.SymbolsCount}</i></h6></li>
+                   <li>
+                   <div>
+                     <h6>Ключевые слова</h6>
+                       for index, el := range article.Keywords {
+                           <p>{fmt.Sprint(index + 1)}. {el.Name} - <i>{el.Count}</i></p>
+                       }
+                   </div>
+                   </li>
+                   </ul>
+                 </details>
+                </article>
+             }
              </div>
           </div>
           <dialog id="create-dialog">
@@ -418,9 +416,18 @@ templ NewArticles(articles []*Article, themes []*Theme, personalities []*Persona
                          <option selected disabled value="">
                             Выберите тему...
                          </option>
-                         for _, theme := range themes {
-                         <option>{theme.Description}</option>
-                         }
+                          if len(themes) > 0 {
+                          <option disabled>Мои темы</option>
+                             for _, theme := range themes {
+                                <option>{theme.Description}</option>
+                             }
+                          }
+                         if len(feederThemes) > 0 {
+                          <option disabled>Темы с интернета</option>
+                              for _, theme := range feederThemes {
+                                 <option>{theme.Description}</option>
+                              }
+                          }
                       </select>
                    </label>
                    <label>
@@ -448,10 +455,6 @@ templ NewArticles(articles []*Article, themes []*Theme, personalities []*Persona
                       rows="10"
                       placeholder="Напишите или сгенерируйте статью"
                       aria-label="Напишите или сгенерируйте статью"></textarea>
-                   </label>
-                   <label>
-                   Количество слов
-                   <input id="words-count" type="number" name="words" placeholder="200" value="200">
                    </label>
                    <button id="generate-content" class="outline">Сгенерировать статью </button>
                    <br><br>

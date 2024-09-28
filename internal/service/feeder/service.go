@@ -26,6 +26,7 @@ func NewService(cfg *Config, themes storage.Theme, feeders ...Feeder) *Service {
 func (s *Service) Run(ctx context.Context) {
 	log.Info().Msgf("Started feeder with %v sources", len(s.Feeders))
 
+	ctx = context.WithValue(ctx, storage.UserLogin, "feeder")
 	ticker := time.NewTicker(s.cfg.FeedUpdateDelay)
 	s.updateThemes(ctx)
 

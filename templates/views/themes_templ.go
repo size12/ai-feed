@@ -16,7 +16,7 @@ type Theme struct {
 	Description string
 }
 
-func NewThemes(themes []*Theme) templ.Component {
+func NewThemes(themes []*Theme, feederThemes []*Theme) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -37,43 +37,99 @@ func NewThemes(themes []*Theme) templ.Component {
 			templ_7745c5c3_Var1 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("<!doctype html><html lang=\"ru\"><head><meta charset=\"UTF-8\"><title>Панель управления</title><link rel=\"stylesheet\" href=\"https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css\"><script>\n             const namesSrc = {\n                \"create\": {\n                   \"method\": \"POST\",\n                   \"title\": \"Создать новую тему\",\n                   \"header\": \"Заполните нужную информацию для создания новой темы\",\n                   \"button\": \"Создать\",\n                   \"error\": \"Не получилось создать новую тему\"\n                },\n                \"edit\": {\n                   \"method\": \"PUT\",\n                   \"title\": \"Редактирование темы\",\n                   \"header\": \"Измените нужную информацию\",\n                   \"button\": \"Сохранить\",\n                   \"error\": \"Не получилось отредактировать тему\"\n                }\n             }\n\n             function validateForm(formData) {\n                for (let [key, val] of formData.entries()) {\n                   if (val === \"\") {\n                      alert(`Поле '${key}' не должно быть пустым`)\n                      return false\n                   }\n                }\n\n                return true\n             }\n\n             function createDialog(param, id = \"\", description = \"\") {\n                const names = namesSrc[param]\n\n                const dialogHTML = `\n                           <article>\n                              <header>\n                                 <button aria-label=\"close\" rel=\"prev\" id=\"close-dialog\"></button>\n                                 <p>\n                                    <strong>${names[\"title\"]}</strong>\n                                 </p>\n                              </header>\n                              <p>\n                                 <u>${names[\"header\"]}</u>\n                              </p>\n                              <form id=\"create-form\">\n                                 <label>\n                                 Тема\n                                 <input type=\"text\" name=\"description\" placeholder=\"OpenAI выпустила новую революционную модель o1\" value=\"${description}\">\n                                 </label>\n                              </form>\n                              <footer>\n                                 <button id=\"dialog-btn\">${names[\"button\"]}</button>\n                              </footer>\n                           </article>\n                           `\n\n                const dialog = document.createElement('dialog');\n                dialog.open = true;\n                dialog.innerHTML = dialogHTML;\n\n                dialog.querySelector(\"#close-dialog\").onclick = function() {\n                   dialog.parentNode.removeChild(dialog);\n                }\n\n                const form = dialog.querySelector(\"form\")\n\n                dialog.querySelector(\"#dialog-btn\").addEventListener(\"click\", function(event) {\n                   event.preventDefault()\n\n                   const formData = new FormData(form);\n\n                   if (!validateForm(formData)) {\n                      return\n                   }\n\n                   let obj = Object.fromEntries(formData)\n                   if (id !== \"\") {\n                      obj[\"id\"] = id\n                   }\n\n                   const json = JSON.stringify(obj);\n\n                   fetch('/api/theme', {\n                      method: names[\"method\"],\n                      headers: {\n                         'Content-Type': 'application/json'\n                      },\n                      body: json\n                   }).then(response => {\n                      if (response.status !== 200 && response.status !== 201 && response.status !== 202) {\n                         response.text().then(function(text) {\n                            alert(`${names[\"error\"]}: ${text}`)\n                         })\n                         return\n                      }\n\n                      location.reload();\n\n                   }).catch(err => alert(`Не получилось отправить запрос на сервер ${err}`))\n                })\n\n                document.body.appendChild(dialog)\n             }\n\n             window.onload = function() {\n                document.querySelector(\"#create-theme\").onclick = function() {\n                   createDialog(\"create\")\n                }\n\n                document.querySelectorAll(\".theme\").forEach(el => {\n                   const id = el.getAttribute(\"data-uuid\")\n\n                   const description = el.querySelector(\"h5\").textContent\n\n                   el.querySelector(\"button.edit\").addEventListener(\"click\", function() {\n                      createDialog(\"edit\", id, description)\n                   })\n\n                   el.querySelector(\"button.delete\").addEventListener(\"click\", function() {\n                      fetch('/api/theme', {\n                         method: 'DELETE',\n                         headers: {\n                            'Content-Type': 'text/plain'\n                         },\n                         body: id\n                      }).then(response => {\n                         if (response.status !== 200) {\n                            response.text().then(function(text) {\n                               alert(`Не получилось удалить тему: ${text}`)\n                            })\n                            return\n                         }\n\n                         location.reload();\n\n                      }).catch(err => alert(`Не получилось отправить запрос на сервер ${err}`))\n                   })\n                })\n             };\n          </script></head><body class=\"container\"><br><nav><ul><li><h1>Добро пожаловать в AI-feed!</h1></li></ul><ul><li><a href=\"/articles\">Статьи</a></li><li><a href=\"/themes\">Темы</a></li><li><a href=\"/personalities\">Личности</a></li></ul></nav><br><div><button class=\"container\" id=\"create-theme\">Создать новую тему</button><br><br><div>")
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("<!doctype html><html lang=\"ru\"><head><meta charset=\"UTF-8\"><title>Панель управления</title><link rel=\"stylesheet\" href=\"https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css\"><script>\n             const namesSrc = {\n                \"create\": {\n                   \"method\": \"POST\",\n                   \"title\": \"Создать новую тему\",\n                   \"header\": \"Заполните нужную информацию для создания новой темы\",\n                   \"button\": \"Создать\",\n                   \"error\": \"Не получилось создать новую тему\"\n                },\n                \"edit\": {\n                   \"method\": \"PUT\",\n                   \"title\": \"Редактирование темы\",\n                   \"header\": \"Измените нужную информацию\",\n                   \"button\": \"Сохранить\",\n                   \"error\": \"Не получилось отредактировать тему\"\n                }\n             }\n\n             function validateForm(formData) {\n                for (let [key, val] of formData.entries()) {\n                   if (val === \"\") {\n                      alert(`Поле '${key}' не должно быть пустым`)\n                      return false\n                   }\n                }\n\n                return true\n             }\n\n             function createDialog(param, id = \"\", description = \"\") {\n                const names = namesSrc[param]\n\n                const dialogHTML = `\n                           <article>\n                              <header>\n                                 <button aria-label=\"close\" rel=\"prev\" id=\"close-dialog\"></button>\n                                 <p>\n                                    <strong>${names[\"title\"]}</strong>\n                                 </p>\n                              </header>\n                              <p>\n                                 <u>${names[\"header\"]}</u>\n                              </p>\n                              <form id=\"create-form\">\n                                 <label>\n                                 Тема\n                                 <input type=\"text\" name=\"description\" placeholder=\"OpenAI выпустила новую революционную модель o1\" value=\"${description}\">\n                                 </label>\n                              </form>\n                              <footer>\n                                 <button id=\"dialog-btn\">${names[\"button\"]}</button>\n                              </footer>\n                           </article>\n                           `\n\n                const dialog = document.createElement('dialog');\n                dialog.open = true;\n                dialog.innerHTML = dialogHTML;\n\n                dialog.querySelector(\"#close-dialog\").onclick = function() {\n                   dialog.parentNode.removeChild(dialog);\n                }\n\n                const form = dialog.querySelector(\"form\")\n\n                dialog.querySelector(\"#dialog-btn\").addEventListener(\"click\", function(event) {\n                   event.preventDefault()\n\n                   const formData = new FormData(form);\n\n                   if (!validateForm(formData)) {\n                      return\n                   }\n\n                   let obj = Object.fromEntries(formData)\n                   if (id !== \"\") {\n                      obj[\"id\"] = id\n                   }\n\n                   const json = JSON.stringify(obj);\n\n                   fetch('/api/theme', {\n                      method: names[\"method\"],\n                      headers: {\n                         'Content-Type': 'application/json'\n                      },\n                      body: json\n                   }).then(response => {\n                      if (response.status !== 200 && response.status !== 201 && response.status !== 202) {\n                         response.text().then(function(text) {\n                            alert(`${names[\"error\"]}: ${text}`)\n                         })\n                         return\n                      }\n\n                      location.reload();\n\n                   }).catch(err => alert(`Не получилось отправить запрос на сервер ${err}`))\n                })\n\n                document.body.appendChild(dialog)\n             }\n\n             window.onload = function() {\n                document.querySelector(\"#create-theme\").onclick = function() {\n                   createDialog(\"create\")\n                }\n\n                document.querySelectorAll(\".theme\").forEach(el => {\n                   const id = el.getAttribute(\"data-uuid\")\n\n                   const description = el.querySelector(\"h5\").textContent\n\n                   el.querySelector(\"button.edit\").addEventListener(\"click\", function() {\n                      createDialog(\"edit\", id, description)\n                   })\n\n                   el.querySelector(\"button.delete\").addEventListener(\"click\", function() {\n                      fetch('/api/theme', {\n                         method: 'DELETE',\n                         headers: {\n                            'Content-Type': 'text/plain'\n                         },\n                         body: id\n                      }).then(response => {\n                         if (response.status !== 200) {\n                            response.text().then(function(text) {\n                               alert(`Не получилось удалить тему: ${text}`)\n                            })\n                            return\n                         }\n\n                         location.reload();\n\n                      }).catch(err => alert(`Не получилось отправить запрос на сервер ${err}`))\n                   })\n                })\n             };\n          </script></head><body class=\"container\"><br><nav><ul><li><h1>Добро пожаловать в AI-feed!</h1></li></ul><ul><li><a href=\"/articles\">Статьи</a></li><li><a href=\"/themes\">Темы</a></li><li><a href=\"/personalities\">Личности</a></li></ul></nav><br><div><button class=\"container\" id=\"create-theme\">Создать новую тему</button><br><br>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		for _, theme := range themes {
-			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("<article class=\"theme\" data-uuid=\"")
+		if len(themes) > 0 {
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("<h5><mark>Мои темы</mark></h5><div>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			var templ_7745c5c3_Var2 string
-			templ_7745c5c3_Var2, templ_7745c5c3_Err = templ.JoinStringErrs(theme.ID.String())
-			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/views/themes.templ`, Line: 181, Col: 67}
+			for _, theme := range themes {
+				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("<article class=\"theme\" data-uuid=\"")
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+				var templ_7745c5c3_Var2 string
+				templ_7745c5c3_Var2, templ_7745c5c3_Err = templ.JoinStringErrs(theme.ID.String())
+				if templ_7745c5c3_Err != nil {
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/views/themes.templ`, Line: 183, Col: 68}
+				}
+				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var2))
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("\"><div class=\"grid\"><h5>")
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+				var templ_7745c5c3_Var3 string
+				templ_7745c5c3_Var3, templ_7745c5c3_Err = templ.JoinStringErrs(theme.Description)
+				if templ_7745c5c3_Err != nil {
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/views/themes.templ`, Line: 185, Col: 45}
+				}
+				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var3))
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("</h5><div class=\"grid\"><button class=\"outline edit\">Редактировать</button> <button class=\"outline secondary delete\">Удалить</button></div></div></article>")
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
 			}
-			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var2))
-			if templ_7745c5c3_Err != nil {
-				return templ_7745c5c3_Err
-			}
-			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("\"><div class=\"grid\"><h5>")
-			if templ_7745c5c3_Err != nil {
-				return templ_7745c5c3_Err
-			}
-			var templ_7745c5c3_Var3 string
-			templ_7745c5c3_Var3, templ_7745c5c3_Err = templ.JoinStringErrs(theme.Description)
-			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/views/themes.templ`, Line: 183, Col: 44}
-			}
-			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var3))
-			if templ_7745c5c3_Err != nil {
-				return templ_7745c5c3_Err
-			}
-			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("</h5><div class=\"grid\"><button class=\"outline edit\">Редактировать</button> <button class=\"outline secondary delete\">Удалить</button></div></div></article>")
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("</div>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 		}
-		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("</div></div></body></html>")
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("<h5><mark>Актуальные темы с интернета</mark></h5>")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		if len(feederThemes) > 0 {
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("<div>")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			for _, theme := range feederThemes {
+				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("<article class=\"theme\" data-uuid=\"")
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+				var templ_7745c5c3_Var4 string
+				templ_7745c5c3_Var4, templ_7745c5c3_Err = templ.JoinStringErrs(theme.ID.String())
+				if templ_7745c5c3_Err != nil {
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/views/themes.templ`, Line: 199, Col: 72}
+				}
+				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var4))
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("\"><div class=\"grid\"><h5>")
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+				var templ_7745c5c3_Var5 string
+				templ_7745c5c3_Var5, templ_7745c5c3_Err = templ.JoinStringErrs(theme.Description)
+				if templ_7745c5c3_Err != nil {
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `templates/views/themes.templ`, Line: 201, Col: 49}
+				}
+				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var5))
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("</h5></div></article>")
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+			}
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("</div>")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+		}
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("</div></body></html>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
