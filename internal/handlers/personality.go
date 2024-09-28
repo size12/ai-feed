@@ -16,7 +16,7 @@ func (h *HTTP) CreatePersonality(c fiber.Ctx) error {
 		return err
 	}
 
-	err := h.service.CreatePersonality(c.Context(), personality)
+	err := h.service.CreatePersonality(c.UserContext(), personality)
 	if err != nil {
 		return fiber.NewError(fiber.StatusInternalServerError, "failed create personality")
 	}
@@ -25,7 +25,7 @@ func (h *HTTP) CreatePersonality(c fiber.Ctx) error {
 }
 
 func (h *HTTP) ReadAllPersonalities(c fiber.Ctx) error {
-	personalities, err := h.service.ReadAllPersonalities(c.Context())
+	personalities, err := h.service.ReadAllPersonalities(c.UserContext())
 	if err != nil {
 		return fiber.NewError(fiber.StatusInternalServerError, "failed get personalities")
 	}
@@ -40,7 +40,7 @@ func (h *HTTP) UpdatePersonality(c fiber.Ctx) error {
 		return err
 	}
 
-	err := h.service.UpdatePersonality(c.Context(), personality)
+	err := h.service.UpdatePersonality(c.UserContext(), personality)
 	if err != nil {
 		return fiber.NewError(fiber.StatusInternalServerError, "failed update personality")
 	}
@@ -54,7 +54,7 @@ func (h *HTTP) DeletePersonality(c fiber.Ctx) error {
 		return fiber.ErrBadRequest
 	}
 
-	err = h.service.DeletePersonality(c.Context(), id)
+	err = h.service.DeletePersonality(c.UserContext(), id)
 
 	if errors.Is(err, storage.ErrNotFound) {
 		return fiber.ErrNotFound
@@ -68,7 +68,7 @@ func (h *HTTP) DeletePersonality(c fiber.Ctx) error {
 }
 
 func (h *HTTP) GetPersonalitiesPage(c fiber.Ctx) error {
-	personalities, err := h.service.ReadAllPersonalities(c.Context())
+	personalities, err := h.service.ReadAllPersonalities(c.UserContext())
 	if err != nil {
 		return fiber.ErrInternalServerError
 	}

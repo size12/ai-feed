@@ -32,6 +32,9 @@ func newPersonalityImpl(db *gorm.DB) *personalityImpl {
 }
 
 func (p *personalityImpl) Create(ctx context.Context, personality *entity.Personality) error {
+	login := ctx.Value(UserLogin).(string)
+	personality.OwnerLogin = login
+
 	if personality.ID.ID() == 0 {
 		personality.ID = uuid.New()
 	}
@@ -51,9 +54,11 @@ func (p *personalityImpl) Create(ctx context.Context, personality *entity.Person
 }
 
 func (p *personalityImpl) ReadAll(ctx context.Context) ([]*entity.Personality, error) {
+	login := ctx.Value(UserLogin).(string)
+
 	var personalities []*entity.Personality
 
-	result := p.db.Order("created_at DESC").Find(&personalities)
+	result := p.db.Where("owner_login = ?", login).Order("created_at DESC").Find(&personalities)
 
 	if result.Error != nil {
 		log.Err(result.Error).Msg("failed read all personalities from db")
@@ -64,7 +69,9 @@ func (p *personalityImpl) ReadAll(ctx context.Context) ([]*entity.Personality, e
 }
 
 func (p *personalityImpl) Update(ctx context.Context, personality *entity.Personality) error {
-	result := p.db.Model(&entity.Personality{}).Where("id = ?", personality.ID).Updates(personality)
+	login := ctx.Value(UserLogin).(string)
+
+	result := p.db.Model(&entity.Personality{}).Where("id = ? AND owner_login = ?", personality.ID, login).Updates(personality)
 
 	if result.Error != nil {
 		log.Err(result.Error).Interface("personality", personality).Msg("failed update personality in db")
@@ -79,9 +86,11 @@ func (p *personalityImpl) Update(ctx context.Context, personality *entity.Person
 }
 
 func (p *personalityImpl) Delete(ctx context.Context, ID uuid.UUID) error {
+	login := ctx.Value(UserLogin).(string)
+
 	personality := &entity.Personality{}
 
-	result := p.db.Where("id = ?", ID).Delete(personality)
+	result := p.db.Where("id = ? AND owner_login = ?", ID, login).Delete(personality)
 
 	if result.Error != nil {
 		log.Err(result.Error).Str("personality_id", ID.String()).Msg("failed delete personality from db")

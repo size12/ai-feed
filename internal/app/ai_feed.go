@@ -2,6 +2,7 @@ package app
 
 import (
 	"ai-feed/internal/handlers"
+	"ai-feed/internal/middleware"
 	"ai-feed/internal/service/feeder"
 	"ai-feed/templates/views"
 	"context"
@@ -13,28 +14,34 @@ import (
 )
 
 type AiFeed struct {
-	handlers *handlers.HTTP
-	cfg      *Config
+	cfg *Config
 
 	app    *fiber.App
 	feeder *feeder.Service
 }
 
-func NewAiFeed(cfg *Config, h *handlers.HTTP, f *feeder.Service) *AiFeed {
+func NewAiFeed(cfg *Config, h *handlers.HTTP, f *feeder.Service, m *middleware.Middleware) *AiFeed {
 	app := fiber.New(fiber.Config{
 		StructValidator: &structValidator{validate: validator.New()},
 		BodyLimit:       64 * 1024 * 1024,
 	})
 
-	app.Use(logger.New(), recover.New())
+	app.Use(
+		logger.New(),
+		recover.New(),
+	)
 
-	app.Get("/personalities", h.GetPersonalitiesPage)
-	app.Get("/themes", h.GetThemesPage)
-	app.Get("/articles", h.GetArticlesPage)
+	app.Get("/auth", h.GetAuthPage)
+	app.Post("/api/auth", h.AuthUser)
+	app.Get("/article/:id", h.GetArticlePage)
 
-	app.Get("/article/:id", h.GetArticle)
+	auth := app.Use(m.AuthUser)
 
-	api := app.Group("/api")
+	auth.Get("/personalities", h.GetPersonalitiesPage)
+	auth.Get("/themes", h.GetThemesPage)
+	auth.Get("/articles", h.GetArticlesPage)
+
+	api := auth.Group("/api")
 
 	api.Post("/generate/article", h.GenerateArticle)
 	api.Post("/generate/image", h.GenerateArticleImage)
@@ -42,9 +49,9 @@ func NewAiFeed(cfg *Config, h *handlers.HTTP, f *feeder.Service) *AiFeed {
 	article := api.Group("/article")
 
 	article.Post("/", h.CreateArticle)
-	article.Get("/:id?", h.ReadArticles)
 	article.Put("/", h.UpdateArticle)
 	article.Delete("/", h.DeleteArticle)
+	article.Get("/:id?", h.ReadArticles)
 
 	personality := api.Group("/personality")
 
@@ -59,17 +66,19 @@ func NewAiFeed(cfg *Config, h *handlers.HTTP, f *feeder.Service) *AiFeed {
 	theme.Get("/", h.ReadAllThemes)
 	theme.Put("/", h.UpdateTheme)
 	theme.Delete("/", h.DeleteTheme)
+	theme.Get("/feeder", h.ReadFeederThemes)
 
 	app.Use(func(c fiber.Ctx) error {
 		c.Set("Content-Type", "text/html")
+		c.Status(fiber.StatusNotFound)
+
 		return views.NotFound().Render(c.Context(), c.Response().BodyWriter())
 	})
 
 	return &AiFeed{
-		handlers: h,
-		cfg:      cfg,
-		app:      app,
-		feeder:   f,
+		cfg:    cfg,
+		app:    app,
+		feeder: f,
 	}
 }
 

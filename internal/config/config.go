@@ -3,6 +3,7 @@ package config
 import (
 	"ai-feed/internal/app"
 	"ai-feed/internal/generator"
+	"ai-feed/internal/service"
 	"ai-feed/internal/service/feeder"
 	"ai-feed/internal/storage"
 	"flag"
@@ -18,6 +19,7 @@ type Config struct {
 	AI      *generator.Config `yaml:"ai"`
 	Storage *storage.Config   `yaml:"storage"`
 	Feeder  *feeder.Config    `yaml:"feeder"`
+	Service *service.Config   `yaml:"service"`
 }
 
 var (
@@ -53,7 +55,7 @@ func validateConfig(cfg *Config) error {
 		return fmt.Errorf("AI config is empty")
 	}
 
-	if cfg.AI.TextModel == "" {
+	if cfg.AI.ModelType == "" {
 		return fmt.Errorf("missing model type")
 	}
 

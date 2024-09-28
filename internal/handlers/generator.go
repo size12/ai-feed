@@ -14,7 +14,7 @@ func (h *HTTP) GenerateArticle(c fiber.Ctx) error {
 		return err
 	}
 
-	article, err := h.service.GenerateArticle(c.Context(), r.Theme, r.Personality)
+	article, err := h.service.GenerateArticle(c.UserContext(), r.Theme, r.Personality)
 	if err != nil {
 		return fiber.NewError(fiber.StatusInternalServerError, "failed generate article")
 	}
@@ -29,7 +29,7 @@ func (h *HTTP) GenerateArticleImage(c fiber.Ctx) error {
 		return err
 	}
 
-	image, err := h.service.GenerateArticleImage(c.Context(), article)
+	image, err := h.service.GenerateArticleImage(c.UserContext(), article)
 	if err != nil {
 		log.Err(err).Msg("failed generate image")
 		return fiber.NewError(fiber.StatusInternalServerError, "failed generate image")

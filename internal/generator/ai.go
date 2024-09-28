@@ -16,8 +16,7 @@ type AI struct {
 	imagePrompt *template.Template
 	titlePrompt *template.Template
 
-	textModel  string
-	imageModel string
+	model string
 }
 
 func NewAI(cfg *Config) *AI {
@@ -43,8 +42,7 @@ func NewAI(cfg *Config) *AI {
 
 	ai := &AI{
 		client:      client,
-		textModel:   cfg.TextModel,
-		imageModel:  cfg.ImageModel,
+		model:       cfg.ModelType,
 		textPrompt:  textPrompt,
 		imagePrompt: imagePrompt,
 		titlePrompt: titlePrompt,
@@ -53,7 +51,7 @@ func NewAI(cfg *Config) *AI {
 	return ai
 }
 
-// GenerateArticle generates articles using OpenAI LLM textModel using theme and personality.
+// GenerateArticle generates articles using OpenAI LLM model using theme and personality.
 func (ai *AI) GenerateArticle(ctx context.Context, theme *entity.Theme, personality *entity.Personality) (*entity.Article, error) {
 	log.Info().Timestamp().
 		Str("personality_id", personality.ID.String()).
@@ -94,7 +92,7 @@ func (ai *AI) generateArticleText(ctx context.Context, personality *entity.Perso
 	}
 
 	textRequest := openai.ChatCompletionRequest{
-		Model: ai.textModel,
+		Model: ai.model,
 		Messages: []openai.ChatCompletionMessage{
 			{
 				Role:    openai.ChatMessageRoleUser,
@@ -129,7 +127,7 @@ func (ai *AI) GenerateArticleImage(ctx context.Context, article *entity.Article)
 	}
 
 	textRequest := openai.ChatCompletionRequest{
-		Model: ai.textModel,
+		Model: ai.model,
 		Messages: []openai.ChatCompletionMessage{
 			{
 				Role:    openai.ChatMessageRoleUser,
@@ -154,7 +152,6 @@ func (ai *AI) GenerateArticleImage(ctx context.Context, article *entity.Article)
 	log.Info().Msgf("generating image with prompt: %s", prompt)
 
 	imageRequest := openai.ImageRequest{
-		Model:          ai.imageModel,
 		Prompt:         prompt,
 		N:              1,
 		Quality:        openai.CreateImageQualityStandard,
@@ -184,7 +181,7 @@ func (ai *AI) generateArticleTitle(ctx context.Context, theme *entity.Theme) (st
 	}
 
 	titleRequest := openai.ChatCompletionRequest{
-		Model: ai.textModel,
+		Model: ai.model,
 		Messages: []openai.ChatCompletionMessage{
 			{
 				Role:    openai.ChatMessageRoleUser,
