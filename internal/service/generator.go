@@ -12,6 +12,6 @@ func (service *AiFeed) GenerateArticle(ctx context.Context, theme *entity.Theme,
 }
 
 func (service *AiFeed) GenerateArticleImage(ctx context.Context, article *entity.Article) (string, error) {
-	log.Info().Interface("article", article).Msg("generate article image")
+	log.Info().Interface("article_id", article.ID).Msg("generate article image")
 	return service.ai.GenerateArticleImage(ctx, article)
 }
