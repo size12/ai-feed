@@ -53,7 +53,7 @@ func validateConfig(cfg *Config) error {
 		return fmt.Errorf("AI config is empty")
 	}
 
-	if cfg.AI.ModelType == "" {
+	if cfg.AI.TextModel == "" {
 		return fmt.Errorf("missing model type")
 	}
 

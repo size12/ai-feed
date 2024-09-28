@@ -3,7 +3,8 @@ app:
 ai:
   open_ai_endpoint: "https://api.proxyapi.ru/openai/v1"
   open_ai_auth_token: "sk-xxx..."
-  model_type: "gpt-4o"
+  text_model: "gpt-4o"
+  image_model: "dall-e-3"
 
   image_prompt_path: "./prompts/image_generation.txt"
   text_prompt_path: "./prompts/text_generation.txt"
