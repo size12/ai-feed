@@ -16,7 +16,7 @@ services:
       retries: 5
 
   ai-feed:
-    build: ../ai-feed2
+    build: .
     volumes:
       - ./config.yaml:/config.yaml
     depends_on:

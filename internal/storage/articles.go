@@ -43,7 +43,7 @@ func (a *articleImpl) Create(ctx context.Context, article *entity.Article) error
 	result := a.db.Create(article)
 
 	if result.Error != nil {
-		log.Err(result.Error).Interface("article", article).Msg("failed add article to db")
+		log.Err(result.Error).Interface("article_id", article.ID).Msg("failed add article to db")
 		return result.Error
 	}
 
@@ -92,7 +92,7 @@ func (a *articleImpl) Update(ctx context.Context, article *entity.Article) error
 	result := a.db.Model(&entity.Article{}).Where("id = ? AND owner_login = ?", article.ID, login).Updates(article)
 
 	if result.Error != nil {
-		log.Err(result.Error).Interface("article", article).Msg("failed update article in db")
+		log.Err(result.Error).Interface("article_id", article.ID).Msg("failed update article in db")
 		return result.Error
 	}
 

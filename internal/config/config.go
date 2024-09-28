@@ -43,7 +43,7 @@ func ParseConfig() *Config {
 		}
 
 		if err = validateConfig(cfg); err != nil {
-			log.Fatal().Err(err).Msg("fonfig is not valid")
+			log.Fatal().Err(err).Msg("config is not valid")
 		}
 	})
 
@@ -55,7 +55,7 @@ func validateConfig(cfg *Config) error {
 		return fmt.Errorf("AI config is empty")
 	}
 
-	if cfg.AI.ModelType == "" {
+	if cfg.AI.TextModel == "" {
 		return fmt.Errorf("missing model type")
 	}
 

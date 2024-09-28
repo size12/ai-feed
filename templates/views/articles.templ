@@ -1,6 +1,14 @@
 package views
 
-import "github.com/google/uuid"
+import (
+    "github.com/google/uuid"
+    "fmt"
+)
+
+type Keyword struct {
+    Name string
+    Count string
+}
 
 type Article struct {
     ID uuid.UUID
@@ -8,6 +16,11 @@ type Article struct {
 	Title       string
     ImageBase64 string
     Content     string
+
+    WordsCount string
+    SymbolsCount string
+
+    Keywords []*Keyword
 }
 
 templ NewArticles(articles []*Article, themes []*Theme, feederThemes []*Theme, personalities []*Personality) {
@@ -354,18 +367,35 @@ templ NewArticles(articles []*Article, themes []*Theme, feederThemes []*Theme, p
              <button class="container" id="create-article">Создать новую статью</button>
              <br><br>
              <div>
-                for _, article := range articles {
+             for _, article := range articles {
                 <article class="article" data-uuid={article.ID.String()}>
+                <details open>
+                  <summary>
                    <div class="grid">
-                      <h5>{article.Title}</h5>
+                      <h5><mark>{article.Title}</mark></h5>
                       <div class="grid">
                          <button class="open">Открыть</button>
-                         <button class="outline edit">Редактировать</button>
                          <button class="outline secondary delete">Удалить</button>
+                         <button class="outline edit">Редактировать</button>
                       </div>
                    </div>
+                   </summary>
+                   <h5><mark>Аналитика:</mark></h5>
+                   <ul>
+                   <li><h6>Количество слов - <i>{article.WordsCount}</i></h6></li>
+                   <li><h6>Количество символов - <i>{article.SymbolsCount}</i></h6></li>
+                   <li>
+                   <div>
+                     <h6>Ключевые слова</h6>
+                       for index, el := range article.Keywords {
+                           <p>{fmt.Sprint(index + 1)}. {el.Name} - <i>{el.Count}</i></p>
+                       }
+                   </div>
+                   </li>
+                   </ul>
+                 </details>
                 </article>
-                }
+             }
              </div>
           </div>
           <dialog id="create-dialog">
