@@ -12,6 +12,7 @@ docker-compose up -d
 + Генерация статей на актуальные темы
 + Возможность публикация статей в открытый доступ
 + Создание и редактирование личностей авторов
++ Авторизация
 + Парсинг актуальных новостей с сайтов [vc.ru](https://vc.ru) и [ixbt.com](https://ixbt.com)
 + Возможность генерации на разных языках
 + Генерации избражений с помощью DALL-E 3
@@ -38,7 +39,8 @@ app:
 ai:
   open_ai_endpoint: "" # Эндпоинт OpenAI API, например https://api.proxyapi.ru/openai/v1 или https://api.openai.com/v1
   open_ai_auth_token: "" # Токен авторизациии OpenAI API, вида 'sk-xxx...'
-  model_type: "gpt-4o" # LLM модель
+  text_model: "gpt-4o" # LLM модель для генерации текста
+  image_model: "dall-e-3" # модель для генерации изображений
 
   image_prompt_path: "./prompts/image_generation.txt" # Промпт для генерации промпта картинки
   text_prompt_path: "./prompts/text_generation.txt"  # промпт для генерации самой статьи
@@ -51,4 +53,9 @@ storage:
 
 feeder:
   feed_update_delay: 1h # Время периода обновления новых тем (каждый раз спустя feed_update_delay парсер собирает актуальные темы)
+
+service:
+  auth:
+    secret_key: "secret_key" # секретный ключ для подписи JWT токенов 
+    password_salt: "password_salt" # соль для хэширования паролей
 ```
