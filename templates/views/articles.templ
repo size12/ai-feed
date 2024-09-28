@@ -1,6 +1,14 @@
 package views
 
-import "github.com/google/uuid"
+import (
+    "github.com/google/uuid"
+    "fmt"
+)
+
+type Keyword struct {
+    Name string
+    Count string
+}
 
 type Article struct {
     ID uuid.UUID
@@ -8,6 +16,11 @@ type Article struct {
 	Title       string
     ImageBase64 string
     Content     string
+
+    WordsCount string
+    SymbolsCount string
+
+    Keywords []*Keyword
 }
 
 templ NewArticles(articles []*Article, themes []*Theme, personalities []*Personality) {
@@ -150,6 +163,7 @@ templ NewArticles(articles []*Article, themes []*Theme, personalities []*Persona
                const content = dialogElement.querySelector("#article-content")
                const articleImage = dialogElement.querySelector("#article-image")
                const saveArticleBtn = dialogElement.querySelector("#save-article-btn")
+               const metricsBtn = dialogElement.querySelector(".metrics")
 
                document.querySelector("#create-article").onclick = function() {
                   dialogElement.open = true;
@@ -355,16 +369,34 @@ templ NewArticles(articles []*Article, themes []*Theme, personalities []*Persona
              <br><br>
              <div>
                 for _, article := range articles {
-                <article class="article" data-uuid={article.ID.String()}>
-                   <div class="grid">
-                      <h5>{article.Title}</h5>
+
+                   <article class="article" data-uuid={article.ID.String()}>
+                   <details open>
+                     <summary>
                       <div class="grid">
-                         <button class="open">Открыть</button>
-                         <button class="outline edit">Редактировать</button>
-                         <button class="outline secondary delete">Удалить</button>
+                         <h5><mark>{article.Title}</mark></h5>
+                         <div class="grid">
+                            <button class="open">Открыть</button>
+                            <button class="outline secondary delete">Удалить</button>
+                            <button class="outline edit">Редактировать</button>
+                         </div>
                       </div>
-                   </div>
-                </article>
+                      </summary>
+                      <h5><mark>Аналитика:</mark></h5>
+                      <ul>
+                      <li><h6>Количество слов - <i>{article.WordsCount}</i></h6></li>
+                      <li><h6>Количество символов - <i>{article.SymbolsCount}</i></h6></li>
+                      <li>
+                      <div>
+                        <h6>Ключевые слова</h6>
+                          for index, el := range article.Keywords {
+                              <p>{fmt.Sprint(index + 1)}. {el.Name} - <i>{el.Count}</i></p>
+                          }
+                      </div>
+                      </li>
+                      </ul>
+                    </details>
+                   </article>
                 }
              </div>
           </div>
@@ -416,6 +448,10 @@ templ NewArticles(articles []*Article, themes []*Theme, personalities []*Persona
                       rows="10"
                       placeholder="Напишите или сгенерируйте статью"
                       aria-label="Напишите или сгенерируйте статью"></textarea>
+                   </label>
+                   <label>
+                   Количество слов
+                   <input id="words-count" type="number" name="words" placeholder="200" value="200">
                    </label>
                    <button id="generate-content" class="outline">Сгенерировать статью </button>
                    <br><br>
