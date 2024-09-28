@@ -7,6 +7,15 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
+//	@Summary		GenerateArticle
+//	@Description	Generates article text and title for theme
+//	@Security		header
+//	@Tags			generate
+//	@ID				generate-article
+//	@Accept			json
+//	@Produce		text/plain
+//	@Param			input	body	request.GenerateRequest	true	"generate request"
+//	@Router			/generate/article [post]
 func (h *HTTP) GenerateArticle(c fiber.Ctx) error {
 	r := &request.GenerateRequest{}
 
@@ -22,6 +31,15 @@ func (h *HTTP) GenerateArticle(c fiber.Ctx) error {
 	return c.Status(fiber.StatusOK).JSON(article)
 }
 
+//	@Summary		GenerateArticleImage
+//	@Description	Generates image for article
+//	@Security		header
+//	@Tags			generate
+//	@ID				generate-image
+//	@Accept			json
+//	@Produce		text/plain
+//	@Param			input	body	entity.Article	true	"article"
+//	@Router			/generate/image [post]
 func (h *HTTP) GenerateArticleImage(c fiber.Ctx) error {
 	article := &entity.Article{}
 

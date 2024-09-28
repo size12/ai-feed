@@ -12,6 +12,15 @@ import (
 	"strings"
 )
 
+//	@Summary		CreateArticle
+//	@Description	Saves article's text and image
+//	@Security		header
+//	@Tags			article
+//	@ID				create-article
+//	@Accept			json
+//	@Produce		text/plain
+//	@Param			input	body	entity.Article	true	"article information"
+//	@Router			/article [post]
 func (h *HTTP) CreateArticle(c fiber.Ctx) error {
 	article := &entity.Article{}
 
@@ -27,6 +36,15 @@ func (h *HTTP) CreateArticle(c fiber.Ctx) error {
 	return c.Status(fiber.StatusCreated).Send(nil)
 }
 
+//	@Summary		ReadArticles
+//	@Description	Read all articles or one by ID
+//	@Security		header
+//	@Tags			article
+//	@ID				read-articles
+//	@Accept			text/plain
+//	@Produce		json
+//	@Param			id	query	string	false	"article ID"
+//	@Router			/article [get]
 func (h *HTTP) ReadArticles(c fiber.Ctx) error {
 	idStr := c.Query("id")
 	c.Set("Content-Type", "application/json")
@@ -55,6 +73,15 @@ func (h *HTTP) ReadArticles(c fiber.Ctx) error {
 	return c.Status(fiber.StatusOK).JSON(article)
 }
 
+//	@Summary		UpdateArticle
+//	@Description	Updates article's text and image
+//	@Security		header
+//	@Tags			article
+//	@ID				update-article
+//	@Accept			json
+//	@Produce		text/plain
+//	@Param			input	body	entity.Article	true	"new article information"
+//	@Router			/article [put]
 func (h *HTTP) UpdateArticle(c fiber.Ctx) error {
 	article := &entity.Article{}
 
@@ -70,6 +97,15 @@ func (h *HTTP) UpdateArticle(c fiber.Ctx) error {
 	return c.Status(fiber.StatusAccepted).Send(nil)
 }
 
+//	@Summary		DeleteArticle
+//	@Description	Delete article by ID
+//	@Security		header
+//	@Tags			article
+//	@ID				delete-articles
+//	@Accept			text/plain
+//	@Produce		text/plain
+//	@Param			input	body	string	true	"article ID"
+//	@Router			/article [delete]
 func (h *HTTP) DeleteArticle(c fiber.Ctx) error {
 	id, err := uuid.ParseBytes(c.Body())
 	if err != nil {

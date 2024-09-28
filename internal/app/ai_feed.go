@@ -8,9 +8,13 @@ import (
 	"context"
 	"github.com/go-playground/validator/v10"
 	"github.com/gofiber/fiber/v3"
+	"github.com/gofiber/fiber/v3/middleware/adaptor"
 	"github.com/gofiber/fiber/v3/middleware/logger"
 	"github.com/gofiber/fiber/v3/middleware/recover"
 	"github.com/rs/zerolog/log"
+	httpSwagger "github.com/swaggo/http-swagger"
+
+	_ "ai-feed/docs"
 )
 
 type AiFeed struct {
@@ -19,6 +23,9 @@ type AiFeed struct {
 	app    *fiber.App
 	feeder *feeder.Service
 }
+
+// @title AI-feed API
+// @BasePath  /api
 
 func NewAiFeed(cfg *Config, h *handlers.HTTP, f *feeder.Service, m *middleware.Middleware) *AiFeed {
 	app := fiber.New(fiber.Config{
@@ -34,6 +41,12 @@ func NewAiFeed(cfg *Config, h *handlers.HTTP, f *feeder.Service, m *middleware.M
 	app.Get("/auth", h.GetAuthPage)
 	app.Post("/api/auth", h.AuthUser)
 	app.Get("/article/:id", h.GetArticlePage)
+	app.Get("api/theme/feeder", h.ReadFeederThemes)
+
+	app.Get("/swagger/*", adaptor.HTTPHandler(
+		httpSwagger.Handler(
+			httpSwagger.URL("/swagger/doc.json"),
+		)))
 
 	auth := app.Use(m.AuthUser)
 
@@ -66,7 +79,6 @@ func NewAiFeed(cfg *Config, h *handlers.HTTP, f *feeder.Service, m *middleware.M
 	theme.Get("/", h.ReadAllThemes)
 	theme.Put("/", h.UpdateTheme)
 	theme.Delete("/", h.DeleteTheme)
-	theme.Get("/feeder", h.ReadFeederThemes)
 
 	app.Use(func(c fiber.Ctx) error {
 		c.Set("Content-Type", "text/html")

@@ -1,0 +1,386 @@
+basePath: /api
+definitions:
+  entity.Article:
+    properties:
+      content:
+        type: string
+      created_at:
+        type: string
+      id:
+        type: string
+      image_base64:
+        type: string
+      keywords:
+        items:
+          $ref: '#/definitions/entity.Keyword'
+        type: array
+      symbols_count:
+        type: integer
+      title:
+        type: string
+      words_count:
+        type: integer
+    required:
+    - content
+    - title
+    type: object
+  entity.Keyword:
+    properties:
+      count:
+        type: integer
+      name:
+        type: string
+    type: object
+  entity.Personality:
+    properties:
+      biography:
+        type: string
+      created_at:
+        type: string
+      id:
+        type: string
+      keywords:
+        type: string
+      name:
+        type: string
+      text_style:
+        type: string
+      thematics:
+        type: string
+    required:
+    - biography
+    - keywords
+    - name
+    - text_style
+    - thematics
+    type: object
+  entity.Theme:
+    properties:
+      created_at:
+        type: string
+      description:
+        type: string
+      id:
+        type: string
+    required:
+    - description
+    type: object
+  entity.User:
+    properties:
+      login:
+        type: string
+      password:
+        type: string
+    required:
+    - login
+    - password
+    type: object
+  request.GenerateRequest:
+    properties:
+      personality:
+        $ref: '#/definitions/entity.Personality'
+      theme:
+        $ref: '#/definitions/entity.Theme'
+    required:
+    - personality
+    - theme
+    type: object
+info:
+  contact: {}
+  title: AI-feed API
+paths:
+  /article:
+    delete:
+      consumes:
+      - text/plain
+      description: Delete article by ID
+      operationId: delete-articles
+      parameters:
+      - description: article ID
+        in: body
+        name: input
+        required: true
+        schema:
+          type: string
+      produces:
+      - text/plain
+      responses: {}
+      security:
+      - header: []
+      summary: DeleteArticle
+      tags:
+      - article
+    get:
+      consumes:
+      - text/plain
+      description: Read all articles or one by ID
+      operationId: read-articles
+      parameters:
+      - description: article ID
+        in: query
+        name: id
+        type: string
+      produces:
+      - application/json
+      responses: {}
+      security:
+      - header: []
+      summary: ReadArticles
+      tags:
+      - article
+    post:
+      consumes:
+      - application/json
+      description: Saves article's text and image
+      operationId: create-article
+      parameters:
+      - description: article information
+        in: body
+        name: input
+        required: true
+        schema:
+          $ref: '#/definitions/entity.Article'
+      produces:
+      - text/plain
+      responses: {}
+      security:
+      - header: []
+      summary: CreateArticle
+      tags:
+      - article
+    put:
+      consumes:
+      - application/json
+      description: Updates article's text and image
+      operationId: update-article
+      parameters:
+      - description: new article information
+        in: body
+        name: input
+        required: true
+        schema:
+          $ref: '#/definitions/entity.Article'
+      produces:
+      - text/plain
+      responses: {}
+      security:
+      - header: []
+      summary: UpdateArticle
+      tags:
+      - article
+  /auth:
+    post:
+      consumes:
+      - application/json
+      description: 'Login by credentials, or create new user. Set auth cookie: token={received_token}'
+      operationId: auth-user
+      parameters:
+      - description: account credentials
+        in: body
+        name: input
+        required: true
+        schema:
+          $ref: '#/definitions/entity.User'
+      produces:
+      - application/json
+      responses: {}
+      summary: AuthUser
+      tags:
+      - auth
+  /generate/article:
+    post:
+      consumes:
+      - application/json
+      description: Generates article text and title for theme
+      operationId: generate-article
+      parameters:
+      - description: generate request
+        in: body
+        name: input
+        required: true
+        schema:
+          $ref: '#/definitions/request.GenerateRequest'
+      produces:
+      - text/plain
+      responses: {}
+      security:
+      - header: []
+      summary: GenerateArticle
+      tags:
+      - generate
+  /generate/image:
+    post:
+      consumes:
+      - application/json
+      description: Generates image for article
+      operationId: generate-image
+      parameters:
+      - description: article
+        in: body
+        name: input
+        required: true
+        schema:
+          $ref: '#/definitions/entity.Article'
+      produces:
+      - text/plain
+      responses: {}
+      security:
+      - header: []
+      summary: GenerateArticleImage
+      tags:
+      - generate
+  /personality:
+    delete:
+      consumes:
+      - text/plain
+      description: Deletes personality
+      operationId: delete-personality
+      parameters:
+      - description: personality ID
+        in: body
+        name: input
+        required: true
+        schema:
+          type: string
+      produces:
+      - text/plain
+      responses: {}
+      security:
+      - header: []
+      summary: DeletePersonality
+      tags:
+      - personality
+    get:
+      description: Read all personalities
+      operationId: read-personalities
+      produces:
+      - application/json
+      responses: {}
+      security:
+      - header: []
+      summary: ReadAllPersonalities
+      tags:
+      - personality
+    post:
+      consumes:
+      - application/json
+      description: Saves personality
+      operationId: create-personality
+      parameters:
+      - description: personality information
+        in: body
+        name: input
+        required: true
+        schema:
+          $ref: '#/definitions/entity.Personality'
+      produces:
+      - text/plain
+      responses: {}
+      security:
+      - header: []
+      summary: CreatePersonality
+      tags:
+      - personality
+    put:
+      consumes:
+      - application/json
+      description: Updates personality
+      operationId: update-personality
+      parameters:
+      - description: personality updated information
+        in: body
+        name: input
+        required: true
+        schema:
+          $ref: '#/definitions/entity.Personality'
+      produces:
+      - text/plain
+      responses: {}
+      security:
+      - header: []
+      summary: UpdatePersonality
+      tags:
+      - personality
+  /theme:
+    delete:
+      consumes:
+      - text/plain
+      description: Deletes theme
+      operationId: delete-theme
+      parameters:
+      - description: theme ID
+        in: body
+        name: input
+        required: true
+        schema:
+          type: string
+      produces:
+      - text/plain
+      responses: {}
+      security:
+      - header: []
+      summary: DeleteTheme
+      tags:
+      - theme
+    get:
+      description: Read user themes
+      operationId: read-themes
+      produces:
+      - application/json
+      responses: {}
+      security:
+      - header: []
+      summary: ReadUserThemes
+      tags:
+      - theme
+    post:
+      consumes:
+      - application/json
+      description: Creates theme
+      operationId: create-theme
+      parameters:
+      - description: theme description
+        in: body
+        name: input
+        required: true
+        schema:
+          $ref: '#/definitions/entity.Theme'
+      produces:
+      - text/plain
+      responses: {}
+      security:
+      - header: []
+      summary: CreateTheme
+      tags:
+      - theme
+    put:
+      consumes:
+      - application/json
+      description: Updated theme
+      operationId: update-theme
+      parameters:
+      - description: theme new description
+        in: body
+        name: input
+        required: true
+        schema:
+          $ref: '#/definitions/entity.Theme'
+      produces:
+      - text/plain
+      responses: {}
+      security:
+      - header: []
+      summary: UpdateTheme
+      tags:
+      - theme
+  /theme/feeder:
+    get:
+      description: Read feeder themes
+      operationId: read-feeder-themes
+      produces:
+      - application/json
+      responses: {}
+      summary: ReadFeederThemes
+      tags:
+      - theme
+swagger: "2.0"

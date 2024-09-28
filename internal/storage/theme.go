@@ -81,7 +81,7 @@ func (t *themeImpl) ReadAll(ctx context.Context) ([]*entity.Theme, error) {
 func (t *themeImpl) Update(ctx context.Context, theme *entity.Theme) error {
 	login := ctx.Value(UserLogin).(string)
 
-	result := t.db.Model(&entity.Theme{}).Where("id = ? AND owner_login = ?", theme.ID, login).Updates(theme)
+	result := t.db.Model(&entity.Theme{}).Where("id = ? AND owner_login = ? AND deleted = FALSE", theme.ID, login).Updates(theme)
 
 	if result.Error != nil {
 		log.Err(result.Error).Interface("theme", theme).Msg("failed update theme in db")

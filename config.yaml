@@ -17,3 +17,8 @@ storage:
 
 feeder:
   feed_update_delay: 1h
+
+service:
+  auth:
+    secret_key: "secret_key"
+    password_salt: "password_salt"
