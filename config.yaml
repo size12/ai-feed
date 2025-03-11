@@ -1,7 +1,7 @@
 app:
   run_port: ":8080"
-  cert_file_path: "./fullchain.pem"
-  key_file_path: "./privkey.pem"
+  cert_file: "./fullchain.pem"
+  key_file: "./privkey.pem"
 ai:
   open_ai_endpoint: "https://api.proxyapi.ru/openai/v1"
   open_ai_auth_token: "sk-xxx..."
