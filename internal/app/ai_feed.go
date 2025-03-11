@@ -109,7 +109,10 @@ func (app *AiFeed) Run(ctx context.Context) {
 
 	log.Info().Msgf("Started server on %s", app.cfg.RunPort)
 
-	err := app.app.Listen(app.cfg.RunPort)
+	err := app.app.Listen(app.cfg.RunPort, fiber.ListenConfig{
+		CertFile:    app.cfg.CertFile,
+		CertKeyFile: app.cfg.KeyFile,
+	})
 	if err != nil {
 		log.Fatal().Err(err).Msg("server shutdown")
 	}

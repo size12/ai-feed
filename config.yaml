@@ -1,9 +1,11 @@
 app:
   run_port: ":8080"
+  cert_file_path: "./fullchain.pem"
+  key_file_path: "./privkey.pem"
 ai:
   open_ai_endpoint: "https://api.proxyapi.ru/openai/v1"
   open_ai_auth_token: "sk-xxx..."
-  text_model: "gpt-4o"
+  text_model: "o3-mini"
   image_model: "dall-e-3"
 
   image_prompt_path: "./prompts/image_generation.txt"
