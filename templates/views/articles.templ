@@ -2,6 +2,7 @@ package views
 
 import (
     "github.com/google/uuid"
+    "ai-feed/internal/entity"
     "fmt"
 )
 
@@ -23,7 +24,7 @@ type Article struct {
     Keywords []*Keyword
 }
 
-templ NewArticles(articles []*Article, themes []*Theme, feederThemes []*Theme, personalities []*Personality) {
+templ NewArticles(articles []*Article, themes []*Theme, feederThemes []*Theme, personalities []*Personality, socials []*entity.SocialNetwork) {
     <!DOCTYPE html>
     <html lang="ru">
        <head>
@@ -33,6 +34,13 @@ templ NewArticles(articles []*Article, themes []*Theme, feederThemes []*Theme, p
              rel="stylesheet"
              href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css"
              >
+          <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+          <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+          <style>
+            .grid > button {
+                font-size: 15px;
+            }
+          </style>
           <script>
             function validateForm(formData) {
                for (let [key, val] of formData.entries()) {
@@ -156,6 +164,7 @@ templ NewArticles(articles []*Article, themes []*Theme, feederThemes []*Theme, p
 
             window.onload = function() {
                const dialogElement = document.querySelector("#create-dialog")
+               const publishDialog = document.querySelector("#publish-dialog")
                const dialogForm = dialogElement.querySelector("form")
                const themeSelect = dialogElement.querySelector("#select-theme")
                const personalitySelect = dialogElement.querySelector("#select-personality")
@@ -163,10 +172,58 @@ templ NewArticles(articles []*Article, themes []*Theme, feederThemes []*Theme, p
                const content = dialogElement.querySelector("#article-content")
                const articleImage = dialogElement.querySelector("#article-image")
                const saveArticleBtn = dialogElement.querySelector("#save-article-btn")
+               const publishToSocialBtn = publishDialog.querySelector("#publish-to-social-btn")
+               const publishSocialID = publishDialog.querySelector("#select-social")
+
+               const now = new Date(); // Получаем текущее время
+
+               let timestamp = 0;
+
+               flatpickr("#datepicker", {
+                 enableTime: true,
+                 dateFormat: "Y-m-d H:i",
+                 minDate: "today", // Запрещает выбор предыдущих дат
+                 minTime: now.getHours() + ":" + now.getMinutes(), // Ограничивает выбор времени в текущий день
+                 onChange: (selectedDates, dateStr, instance) => {
+
+                    if (selectedDates.length > 0) {
+                          const selectedDate = selectedDates[0];
+
+                         // Если выбранная дата = текущая дата, то обновляем `minTime`
+                         if (selectedDate.toDateString() === now.toDateString()) {
+                           instance.set("minTime", now.getHours() + ":" + now.getMinutes());
+                         } else {
+                           instance.set("minTime", null); // Снимаем ограничение для будущих дней
+                         }
+
+                          timestamp = Date.UTC(
+                            selectedDates[0].getUTCFullYear(),
+                            selectedDates[0].getUTCMonth(),
+                            selectedDates[0].getUTCDate(),
+                            selectedDates[0].getUTCHours(),
+                            selectedDates[0].getUTCMinutes()
+                          );
+                     }
+                 }
+               });
 
                document.querySelector("#create-article").onclick = function() {
                   dialogElement.open = true;
                }
+
+               document.querySelectorAll(".publish-article-btn").forEach(el => {
+                const id = el.parentElement.parentElement.parentElement.parentElement.parentElement.getAttribute("data-uuid")
+                el.onclick = function() {
+                   publishDialog.setAttribute("data-uuid", id)
+                   publishDialog.open = true;
+                }
+               }
+               )
+
+
+               publishDialog.querySelector("#close-dialog").onclick = function() {
+                 publishDialog.open = false;
+              }
 
                dialogElement.querySelector("#close-dialog").onclick = function() {
                   dialogElement.open = false;
@@ -311,6 +368,45 @@ templ NewArticles(articles []*Article, themes []*Theme, feederThemes []*Theme, p
                      .finally(() => generateImageBtn.setAttribute("aria-busy", false))
                }
 
+               publishToSocialBtn.onclick = () => {
+                  console.log(timestamp)
+
+                   if (publishSocialID.selectedIndex === 0) {
+                        alert("Пожалуйста выберите социальную сеть")
+                        return
+                   }
+
+                   const socialID = publishSocialID[publishSocialID.selectedIndex].getAttribute("data-id")
+                   console.log("social ID:", socialID)
+
+                   const articleID = publishToSocialBtn.parentElement.parentElement.parentElement.getAttribute("data-uuid")
+                   console.log("article ID:", articleID)
+
+                   const request = {
+                        "article_id": articleID,
+                        "social_id": socialID,
+                        "publish_timestamp": timestamp
+                   }
+
+                   fetch("/api/social/publish", {
+                    method: "POST",
+                    headers: {
+                       'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(request)
+                   }).then((response) => {
+                    if (response.status !== 202) {
+                        response.text().then(function(text) {
+                           alert(`Не получилось опубликовать: ${text}`)
+                        })
+                        return
+                        }
+                        window.location.reload()
+                   }).catch(err => {
+                    alert(err)
+                   })
+               }
+
                saveArticleBtn.onclick = () => {
                   if (!title.value) {
                      alert("Нет заголовка")
@@ -360,6 +456,7 @@ templ NewArticles(articles []*Article, themes []*Theme, feederThemes []*Theme, p
                 <li><a href="/articles">Статьи</a></li>
                 <li><a href="/themes">Темы</a></li>
                 <li><a href="/personalities">Личности</a></li>
+<li><a href="/socials">Соц сети</a></li>
              </ul>
           </nav>
           <br>
@@ -369,12 +466,13 @@ templ NewArticles(articles []*Article, themes []*Theme, feederThemes []*Theme, p
              <div>
              for _, article := range articles {
                 <article class="article" data-uuid={article.ID.String()}>
-                <details open>
+                <details>
                   <summary>
                    <div class="grid">
                       <h5><mark>{article.Title}</mark></h5>
                       <div class="grid">
                          <button class="open">Открыть</button>
+                         <button class="publish-article-btn outline">Опубликовать</button>
                          <button class="outline secondary delete">Удалить</button>
                          <button class="outline edit">Редактировать</button>
                       </div>
@@ -468,6 +566,37 @@ templ NewArticles(articles []*Article, themes []*Theme, feederThemes []*Theme, p
                 </footer>
              </article>
           </dialog>
+          <dialog id="publish-dialog">
+           <article>
+              <header>
+                 <button aria-label="close" rel="prev" id="close-dialog"></button>
+                 <p>
+                    <strong>Публикация поста</strong>
+                 </p>
+              </header>
+              <form id="create-form">
+                 <label>
+                    Куда публикуем?
+                    <select id="select-social" name="social" aria-label="Выберите социальную сеть..." required>
+                       <option selected disabled value="">
+                          Выберите социальную сеть
+                       </option>
+                       for _, social := range socials {
+                       <option data-id={social.ID.String()}
+                          >{social.Name} | {social.Type}</option>
+                       }
+                    </select>
+                 </label>
+                 <label>
+                    Когда публикуем?
+                    <input type="text" id="datepicker" placeholder="Выберите дату и время">
+                 </label>
+              </form>
+              <footer>
+                 <button id="publish-to-social-btn">Опубликовать</button>
+              </footer>
+           </article>
+        </dialog>
        </body>
     </html>
 }

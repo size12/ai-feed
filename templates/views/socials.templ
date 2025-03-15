@@ -2,17 +2,20 @@ package views
 
 import "github.com/google/uuid"
 
-type Personality struct {
-    ID uuid.UUID
+type SocialNetwork struct {
+	ID uuid.UUID
 
-	Name      string
-	Biography string
-	Keywords  string
-	Thematics string
-	TextStyle string
+	Name       string
+	OwnerLogin string
+
+	Type string
+
+	APIKey    string
+	ChannelID string
 }
 
-templ NewPersonalities(personalities []*Personality) {
+
+templ NewSocials(socials []*SocialNetwork) {
     <!DOCTYPE html>
     <html lang="ru">
        <head>
@@ -26,17 +29,17 @@ templ NewPersonalities(personalities []*Personality) {
             const namesSrc = {
                "create": {
                   "method": "POST",
-                  "title": "Создать новую личность",
-                  "header": "Заполните нужную информацию для создания новой личности",
+                  "title": "Создать новую соц сеть",
+                  "header": "Заполните нужную информацию для создания новой соц сети",
                   "button": "Создать",
-                  "error": "Не получилось создать новую личность"
+                  "error": "Не получилось создать"
                },
                "edit": {
                   "method": "PUT",
-                  "title": "Редактирование личности",
+                  "title": "Редактирование соц сети",
                   "header": "Измените нужную информацию",
                   "button": "Сохранить",
-                  "error": "Не получилось отредактировать личность"
+                  "error": "Не получилось отредактировать"
                }
             }
 
@@ -51,7 +54,7 @@ templ NewPersonalities(personalities []*Personality) {
                return true
             }
 
-            function createDialog(param, id = "", name = "", biography = "", keywords = "", thematics = "", textStyle = "") {
+            function createDialog(param, id = "", name = "", type_ = "", apiKey = "", channelID = "") {
                const names = namesSrc[param]
 
                const dialogHTML = `
@@ -68,23 +71,25 @@ templ NewPersonalities(personalities []*Personality) {
                            <form id="create-form">
                               <label>
                               Имя
-                              <input type="text" name="name" placeholder="Александр Пушкин" value="${name}">
+                              <input type="text" name="name" placeholder="Группа Теле2" value="${name}">
                               </label>
                               <label>
-                              Биография
-                              <textarea name="biography" placeholder="Великий русский поэт, прозаик, драматург, один из самых авторитетных литературных деятелей первой трети XIX века.">${biography}</textarea>
+                                Соц сеть
+                                <select id="select-theme" name="type" aria-label="Выберите тип..." required>
+                                   <option selected disabled value="">
+                                      Выберите соц сеть...
+                                   </option>
+                                   <option>VK</option>
+                                   <option>Telegram</option>
+                                </select>
+                             </label>
+                              <label>
+                              API ключ
+                              <input type="text" name="apikey" placeholder="1234" value="${apiKey}">
                               </label>
                               <label>
-                              Ключевые слова
-                              <input type="text" name="keywords" placeholder="поэзия литература романтизм" value="${keywords}">
-                              </label>
-                              <label>
-                              Тематика
-                              <input type="text" name="thematics" placeholder="Поэзия" value="${thematics}">
-                              </label>
-                              <label>
-                              Стиль речи
-                              <input type="text" name="text_style" placeholder="Официальный" value="${textStyle}">
+                              Канал/Группа
+                              <input type="text" name="channelID" placeholder="t.me/durov" value="${channelID}">
                               </label>
                            </form>
                            <footer>
@@ -100,6 +105,15 @@ templ NewPersonalities(personalities []*Personality) {
                dialog.querySelector("#close-dialog").onclick = function() {
                   dialog.parentNode.removeChild(dialog);
                }
+
+
+                // выбираем type_
+                const selectElement = dialog.querySelector('#select-theme');
+                const optionToSelect = Array.from(selectElement.options).find(option => option.text === type_);
+
+                if (optionToSelect) {
+                    optionToSelect.selected = true;
+                }
 
                const form = dialog.querySelector("form")
 
@@ -119,7 +133,7 @@ templ NewPersonalities(personalities []*Personality) {
 
                   const json = JSON.stringify(obj);
 
-                  fetch('/api/personality', {
+                  fetch('/api/social', {
                      method: names["method"],
                      headers: {
                         'Content-Type': 'application/json'
@@ -142,25 +156,24 @@ templ NewPersonalities(personalities []*Personality) {
             }
 
             window.onload = function() {
-               document.querySelector("#create-personality").onclick = function() {
+               document.querySelector("#create-social").onclick = function() {
                   createDialog("create")
                }
 
-               document.querySelectorAll(".personality").forEach(el => {
+               document.querySelectorAll(".social").forEach(el => {
                   const id = el.getAttribute("data-uuid")
 
                   const name = el.querySelector("h5").textContent
-                  const bio = el.getAttribute("data-bio")
-                  const keywords = el.getAttribute("data-keywords")
-                  const thematics = el.getAttribute("data-thematics")
-                  const textStyle = el.getAttribute("data-text-style")
+                  const type_ = el.getAttribute("data-type")
+                  const apiKey = el.getAttribute("data-apiKey")
+                  const channelID = el.getAttribute("data-channelID")
 
                   el.querySelector("button.edit").addEventListener("click", function() {
-                     createDialog("edit", id, name, bio, keywords, thematics, textStyle)
+                     createDialog("edit", id, name, type_, apiKey, channelID)
                   })
 
                   el.querySelector("button.delete").addEventListener("click", function() {
-                     fetch('/api/personality', {
+                     fetch('/api/social', {
                         method: 'DELETE',
                         headers: {
                            'Content-Type': 'text/plain'
@@ -169,7 +182,7 @@ templ NewPersonalities(personalities []*Personality) {
                      }).then(response => {
                         if (response.status !== 200) {
                            response.text().then(function(text) {
-                              alert(`Не получилось удалить личность: ${text}`)
+                              alert(`Не получилось удалить: ${text}`)
                            })
                            return
                         }
@@ -199,13 +212,13 @@ templ NewPersonalities(personalities []*Personality) {
           </nav>
           <br>
           <div>
-             <button class="container" id="create-personality">Создать новую личность</button>
+             <button class="container" id="create-social">Добавить новую соц сеть</button>
              <br><br>
              <div>
-                for _, personality := range personalities {
-                <article class="personality" data-uuid={personality.ID.String()} data-bio={personality.Biography} data-keywords={personality.Keywords} data-thematics={personality.Thematics} data-text-style={personality.TextStyle}>
+                for _, social := range socials {
+                <article class="social" data-uuid={social.ID.String()} data-name={social.Name} data-type={social.Type} data-apiKey={social.APIKey} data-channelID={social.ChannelID}>
                    <div class="grid">
-                      <h5>{personality.Name}</h5>
+                      <h5>{social.Name}</h5>
                       <div class="grid">
                          <button class="outline edit">Редактировать</button>
                          <button class="outline secondary delete">Удалить</button>

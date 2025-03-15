@@ -17,7 +17,7 @@ func NewORM(cfg *Config) *gorm.DB {
 		log.Fatal().Err(err).Msg("failed open postgres db")
 	}
 
-	err = db.AutoMigrate(entity.Personality{}, entity.Theme{}, entity.Article{}, entity.User{})
+	err = db.AutoMigrate(entity.Personality{}, entity.Theme{}, entity.Article{}, entity.User{}, entity.SocialNetwork{})
 
 	if err != nil {
 		log.Fatal().Err(err).Msg("failed auto migrate")

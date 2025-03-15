@@ -9,6 +9,7 @@ type Config struct {
 	Themes        storage.Theme
 	Articles      storage.Article
 	Personalities storage.Personality
+	Socials       storage.Social
 	Users         storage.User
 	Ai            *generator.AI
 
