@@ -28,11 +28,13 @@ func main() {
 	personalities := storage.NewPersonality(db)
 	articles := storage.NewArticle(db)
 	users := storage.NewUser(db, cfg.Storage)
+	socials := storage.NewSocial(db)
 
 	s := service.NewAiFeed(&service.Config{
 		Themes:        themes,
 		Articles:      articles,
 		Personalities: personalities,
+		Socials:       socials,
 		Users:         users,
 		Ai:            ai,
 		AuthConfig:    cfg.Service.AuthConfig,

@@ -53,6 +53,7 @@ func NewAiFeed(cfg *Config, h *handlers.HTTP, f *feeder.Service, m *middleware.M
 	auth.Get("/personalities", h.GetPersonalitiesPage)
 	auth.Get("/themes", h.GetThemesPage)
 	auth.Get("/articles", h.GetArticlesPage)
+	auth.Get("/socials", h.GetSocialsPage)
 
 	api := auth.Group("/api")
 
@@ -79,6 +80,13 @@ func NewAiFeed(cfg *Config, h *handlers.HTTP, f *feeder.Service, m *middleware.M
 	theme.Get("/", h.ReadAllThemes)
 	theme.Put("/", h.UpdateTheme)
 	theme.Delete("/", h.DeleteTheme)
+
+	social := api.Group("/social")
+	social.Post("/", h.CreateSocial)
+	social.Get("/", h.ReadAllSocials)
+	social.Put("/", h.UpdateSocial)
+	social.Delete("/", h.DeleteSocial)
+	social.Post("/publish", h.PublishSocial)
 
 	app.Use(func(c fiber.Ctx) error {
 		c.Set("Content-Type", "text/html")

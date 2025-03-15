@@ -11,6 +11,7 @@ type AiFeed struct {
 	articles      storage.Article
 	personalities storage.Personality
 	users         storage.User
+	socials       storage.Social
 
 	ai *generator.AI
 
@@ -22,6 +23,7 @@ func NewAiFeed(cfg *Config) *AiFeed {
 		themes:        cfg.Themes,
 		articles:      cfg.Articles,
 		personalities: cfg.Personalities,
+		socials:       cfg.Socials,
 		users:         cfg.Users,
 		ai:            cfg.Ai,
 		authCfg:       cfg.AuthConfig,
