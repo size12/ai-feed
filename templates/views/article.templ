@@ -11,23 +11,88 @@ type ShownArticle struct {
 templ NewShownArticle(article *ShownArticle) {
     <!DOCTYPE html>
     <html lang="ru">
-       <head>
-          <meta charset="UTF-8">
-          <title>{article.Title}</title>
-          <link
-             rel="stylesheet"
-             href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css"
-             >
-       </head>
-       <body class="container">
-          <br>
-          <h1>{article.Title}</h1>
-          <div class="grid">
-             if article.ImageBase64 != "" {
-             <img src={article.ImageBase64}>
-             }
-             <p>@templ.FromGoHTML(article.Content, nil)</p>
-          </div>
-       </body>
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>{article.Title}</title>
+        <link
+            rel="stylesheet"
+            href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css"
+        >
+        <style>
+            .article-container {
+                max-width: 1200px;
+                margin: 0 auto;
+                padding: 1rem;
+            }
+
+            .article-header {
+                margin-bottom: 2rem;
+                text-align: center;
+            }
+
+            .article-content {
+                display: flex;
+                flex-direction: column;
+                gap: 2rem;
+            }
+
+            .article-image {
+                max-width: 100%;
+                height: auto;
+                border-radius: 0.5rem;
+                margin: 0 auto;
+                display: block;
+            }
+
+            .article-text {
+                line-height: 1.6;
+                font-size: 1.1rem;
+            }
+
+            @media (min-width: 768px) {
+                .article-content {
+                    flex-direction: row;
+                }
+
+                .article-image-container {
+                    flex: 0 0 40%;
+                }
+
+                .article-text-container {
+                    flex: 1;
+                }
+            }
+
+            @media (max-width: 767px) {
+                .article-image {
+                    max-height: 300px;
+                    width: auto;
+                    margin-bottom: 1.5rem;
+                }
+            }
+        </style>
+    </head>
+    <body>
+        <main class="article-container">
+            <header class="article-header">
+                <h1>{article.Title}</h1>
+            </header>
+
+            <div class="article-content">
+                if article.ImageBase64 != "" {
+                <div class="article-image-container">
+                    <img src={article.ImageBase64} alt={article.Title} class="article-image">
+                </div>
+                }
+
+                <div class="article-text-container">
+                    <article class="article-text">
+                        @templ.FromGoHTML(article.Content, nil)
+                    </article>
+                </div>
+            </div>
+        </main>
+    </body>
     </html>
 }

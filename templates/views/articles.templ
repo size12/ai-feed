@@ -37,7 +37,7 @@ templ NewArticles(articles []*Article, themes []*Theme, feederThemes []*Theme, p
           <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
           <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
           <style>
-            .grid > button {
+            .content > button {
                 font-size: 15px;
             }
           </style>
@@ -463,12 +463,12 @@ templ NewArticles(articles []*Article, themes []*Theme, feederThemes []*Theme, p
           <div>
              <button class="container" id="create-article">Создать новую статью</button>
              <br><br>
-             <div>
+             <div class="overflow-auto">
              for _, article := range articles {
                 <article class="article" data-uuid={article.ID.String()}>
                 <details>
                   <summary>
-                   <div class="grid">
+                   <div class="content">
                       <h5><mark>{article.Title}</mark></h5>
                       <div class="grid">
                          <button class="open">Открыть</button>
