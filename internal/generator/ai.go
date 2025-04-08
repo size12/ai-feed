@@ -28,17 +28,17 @@ func NewAI(cfg *Config) *AI {
 
 	textPrompt, err := template.ParseFiles(cfg.TextPromptPath)
 	if err != nil {
-		log.Fatal().Err(err).Msg("failed read text prompt")
+		log.Panic().Err(err).Msg("failed read text prompt")
 	}
 
 	imagePrompt, err := template.ParseFiles(cfg.ImagePromptPath)
 	if err != nil {
-		log.Fatal().Err(err).Msg("failed read image prompt")
+		log.Panic().Err(err).Msg("failed read image prompt")
 	}
 
 	titlePrompt, err := template.ParseFiles(cfg.TitlePromptPath)
 	if err != nil {
-		log.Fatal().Err(err).Msg("failed read image prompt")
+		log.Panic().Err(err).Msg("failed read image prompt")
 	}
 
 	ai := &AI{

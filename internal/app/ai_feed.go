@@ -107,7 +107,7 @@ func (app *AiFeed) Run(ctx context.Context) {
 		<-ctx.Done()
 		err := app.app.Shutdown()
 		if err != nil {
-			log.Fatal().Err(err).Msg("failed shutdown by context")
+			log.Panic().Err(err).Msg("failed shutdown by context")
 		}
 	}()
 
@@ -122,6 +122,6 @@ func (app *AiFeed) Run(ctx context.Context) {
 		CertKeyFile: app.cfg.KeyFile,
 	})
 	if err != nil {
-		log.Fatal().Err(err).Msg("server shutdown")
+		log.Panic().Err(err).Msg("server shutdown")
 	}
 }

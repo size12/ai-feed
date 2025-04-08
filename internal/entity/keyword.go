@@ -20,7 +20,7 @@ func (keywords Keywords) Value() (driver.Value, error) {
 func (keywords *Keywords) Scan(value interface{}) error {
 	data, ok := value.([]byte)
 	if !ok {
-		log.Fatal().Msg("failed unmarshal JSON")
+		log.Panic().Msg("failed unmarshal JSON")
 	}
 
 	return json.Unmarshal(data, &keywords)

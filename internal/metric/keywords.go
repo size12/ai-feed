@@ -36,7 +36,7 @@ func init() {
 		Get("https://raw.githubusercontent.com/stopwords-iso/stopwords-ru/master/stopwords-ru.txt").End()
 
 	if len(errs) > 0 {
-		log.Fatal().Interface("errors", errs).Msg("Failed fetch russian stop list")
+		log.Panic().Interface("errors", errs).Msg("Failed fetch russian stop list")
 	}
 
 	words := strings.Fields(body)
@@ -47,7 +47,7 @@ func init() {
 		Get("https://raw.githubusercontent.com/stopwords-iso/stopwords-ru/master/stopwords-ru.txt").End()
 
 	if len(errs) > 0 {
-		log.Fatal().Interface("errors", errs).Msg("Failed fetch english stop list")
+		log.Panic().Interface("errors", errs).Msg("Failed fetch english stop list")
 	}
 
 	words = strings.Fields(body)

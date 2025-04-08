@@ -34,16 +34,16 @@ func ParseConfig() *Config {
 
 		configFile, err := os.ReadFile(*configFilePath)
 		if err != nil {
-			log.Fatal().Err(err).Msg("failed open config file")
+			log.Panic().Err(err).Msg("failed open config file")
 		}
 
 		err = yaml.Unmarshal(configFile, cfg)
 		if err != nil {
-			log.Fatal().Err(err).Msg("failed parse config file")
+			log.Panic().Err(err).Msg("failed parse config file")
 		}
 
 		if err = validateConfig(cfg); err != nil {
-			log.Fatal().Err(err).Msg("config is not valid")
+			log.Panic().Err(err).Msg("config is not valid")
 		}
 	})
 

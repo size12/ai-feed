@@ -14,13 +14,13 @@ func NewORM(cfg *Config) *gorm.DB {
 	})
 
 	if err != nil {
-		log.Fatal().Err(err).Msg("failed open postgres db")
+		log.Panic().Err(err).Msg("failed open postgres db")
 	}
 
 	err = db.AutoMigrate(entity.Personality{}, entity.Theme{}, entity.Article{}, entity.User{}, entity.SocialNetwork{})
 
 	if err != nil {
-		log.Fatal().Err(err).Msg("failed auto migrate")
+		log.Panic().Err(err).Msg("failed auto migrate")
 	}
 
 	return db
